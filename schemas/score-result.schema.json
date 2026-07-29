@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://touchstonestandard.org/schemas/0.1/score-result.schema.json",
+  "title": "Touchstone score result",
+  "description": "The full show-your-work output of scoring an assessment: per-region deduction line items, region sub-scores, the binding (worse) side, points, and the resulting grade/label/band.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rubric_id", "rubric_version", "points", "grade", "grade_label", "band", "binding_face", "binding_region", "faces", "line_items"],
+  "properties": {
+    "rubric_id": { "type": "string", "description": "Which rubric produced this result." },
+    "rubric_version": { "type": "string", "description": "SemVer of the rubric that produced this result." },
+    "points": { "type": "integer", "minimum": 0, "description": "The card's points: the worse of the two sides' side_points, floored to an integer." },
+    "grade": {
+      "enum": [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 10],
+      "description": "Whole and half grades from 1 through 8.5, then 9 and 10 — there is no 9.5. That slot is promoted to 10, the market's 9→10 value cliff expressed as arithmetic."
+    },
+    "grade_label": { "type": "string", "description": "NON-NORMATIVE human-readable rendering of the grade — consumers should map `grade` to their own copy, not parse this. The reference scorer emits the bare numeral (e.g. '10', '8.5')." },
+    "band": { "enum": ["NM", "LP", "MP", "HP", "DMG"], "description": "Condition band the grade falls into." },
+    "binding_face": { "enum": ["front", "back"], "description": "Which face's side_points determined the card's points. Ties resolve to front." },
+    "binding_region": {
+      "enum": ["centering", "corners", "edges", "surface", "print"],
+      "description": "Which region on the binding face determined that side's side_points. Ties resolve to the earliest in this order. These are the scored buckets — four normally, five (adding 'print') when the rubric defines print_attributes. Input regions are singular (corner/edge/surface/crease/stain/print_defect); input 'corner' maps to 'corners', 'edge' to 'edges'; crease and stain pool into 'surface'; print_defect and the print attribute ladders pool into 'print'."
+    },
+    "faces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["front", "back"],
+      "description": "Per-face breakdown: each region's sub-score after penalties, and the side's overall points (the min of the regions).",
+      "properties": {
+        "front": { "$ref": "#/$defs/faceResult" },
+        "back": { "$ref": "#/$defs/faceResult" }
+      }
+    },
+    "line_items": {
+      "type": "array",
+      "description": "One entry per deduction applied, in the order encountered.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["face", "region", "detail", "penalty"],
+        "properties": {
+          "face": { "enum": ["front", "back"] },
+          "region": { "enum": ["centering", "corners", "edges", "surface", "print"], "description": "The scored bucket this deduction applied to — input regions are singular; input 'corner' maps to 'corners', 'edge' to 'edges'; crease/stain deductions land in 'surface'; print_defect and print attribute-ladder deductions land in 'print' (rubrics that define print_attributes only)." },
+          "attribute": { "enum": ["focus", "gloss", "border"], "description": "Present ONLY on print-ATTRIBUTE line items (from front/back print.focus/gloss/border) — discriminates them from print_defect DEFECT items, which also carry region 'print' but never this field. Absent on every other line item (centering/corners/edges/surface/crease/stain/print_defect)." },
+          "detail": {
+            "type": "string",
+            "description": "NON-NORMATIVE human-readable summary — consumers should map enums to their own copy, not parse this."
+          },
+          "penalty": { "type": "integer", "minimum": 0, "description": "Points deducted from that region for this line item." }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "faceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regions", "side_points"],
+      "properties": {
+        "regions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["centering", "corners", "edges", "surface"],
+          "description": "Each region's remaining sub-score for this face, floored at 0. The four listed in `required` always appear; `print` appears only in results produced under a rubric that defines print_attributes (config-gated fifth region) — rubrics without it produce strictly four-region results.",
+          "properties": {
+            "centering": { "type": "integer", "minimum": 0 },
+            "corners": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 },
+            "surface": { "type": "integer", "minimum": 0 },
+            "print": { "type": "integer", "minimum": 0, "description": "Present only under rubrics with print_attributes: the print region's remaining sub-score (attribute-ladder penalties + pooled placed print defects)." }
+          }
+        },
+        "side_points": { "type": "integer", "minimum": 0, "description": "The min of the region sub-scores for this face (four, or five under a rubric with print_attributes) — the pure bottleneck." }
+      }
+    }
+  }
+}

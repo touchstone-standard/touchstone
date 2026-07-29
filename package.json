@@ -1,0 +1,28 @@
+{
+  "name": "@touchstonestandard/rubric",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Touchstone — the executable open standard for card condition scoring: the rubric as data, plus the dependency-free reference scorer.",
+  "main": "./scoring.mjs",
+  "exports": {
+    ".": "./scoring.mjs",
+    "./scoring.mjs": "./scoring.mjs",
+    "./rubric.json": "./rubric.json",
+    "./schemas/*": "./schemas/*",
+    "./vectors": "./test/vectors.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "scoring.mjs",
+    "rubric.json",
+    "schemas/",
+    "proposals/",
+    "test/vectors.json",
+    "test/scoring.test.mjs",
+    "RUBRIC.md",
+    "CONTRIBUTING.md",
+    "NOTICE"
+  ],
+  "scripts": { "test": "node --test \"test/**/*.mjs\"" }
+}
