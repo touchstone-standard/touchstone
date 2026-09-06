@@ -1,8 +1,8 @@
 # TIP 0001: 0.2 input semantics
 
-Status: release authorized for Touchstone 0.2 on September 6, 2026 (npm 0.2.0).
-Decision record: [proposal PR #1](https://github.com/touchstone-standard/touchstone/pull/1).
-The Chair's written decision with reasons is required there before publication.
+Status: accepted for Touchstone 0.2 on September 6, 2026 (npm 0.2.0).
+Decision record: [Chair's decision in PR #1](https://github.com/touchstone-standard/touchstone/pull/1#issuecomment-5561212134),
+recording Mike Agnich's release approval and the reasons for the bounded scope.
 
 ## Motivation
 

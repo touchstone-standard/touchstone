@@ -11,6 +11,6 @@ One file per proposal, named for its pull request number once it has one:
 
 ## Proposals
 
-- [TIP 0001: 0.2 input semantics](0001-input-semantics.md) — release authorized
-  September 6, 2026. [PR #1](https://github.com/touchstone-standard/touchstone/pull/1)
-  is the public record for the Chair's written decision and reasons.
+- [TIP 0001: 0.2 input semantics](0001-input-semantics.md) — accepted
+  September 6, 2026. [Chair's decision in PR #1](https://github.com/touchstone-standard/touchstone/pull/1#issuecomment-5561212134)
+  records the release approval and reasons for the bounded scope.
