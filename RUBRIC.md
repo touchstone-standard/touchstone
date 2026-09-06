@@ -1,6 +1,6 @@
 # Touchstone 0.2
 
-September 6, 2026. See the [input-semantics proposal](proposals/draft-02-input-semantics.md)
+September 6, 2026. See the [input-semantics proposal](proposals/0001-input-semantics.md)
 and [changelog](CHANGELOG.md) for the scope and reasons for this release.
 
 Touchstone turns a card condition

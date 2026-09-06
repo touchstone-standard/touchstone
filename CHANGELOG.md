@@ -39,7 +39,7 @@ centering measurement position/window and borderline physical anchors remain
 unresolved. No new empirical accuracy or full-coverage claim accompanies 0.2.
 
 Sources: [0.2 specification](https://github.com/touchstone-standard/touchstone/blob/main/RUBRIC.md),
-[input-semantics proposal](https://github.com/touchstone-standard/touchstone/blob/main/proposals/draft-02-input-semantics.md),
+[input-semantics proposal and decision](https://github.com/touchstone-standard/touchstone/pull/1),
 [conformance and contribution rules](https://github.com/touchstone-standard/touchstone/blob/main/CONTRIBUTING.md).
 
 ## 0.1 — July 28, 2026

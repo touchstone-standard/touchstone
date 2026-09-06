@@ -1,7 +1,7 @@
 # @touchstonestandard/rubric
 
 Touchstone 0.2 — the open standard for card condition scoring (npm `0.2.0`).
-See the [input-semantics proposal](proposals/draft-02-input-semantics.md)
+See the [input-semantics proposal](proposals/0001-input-semantics.md)
 and [implementer-impact note](CHANGELOG.md).
 This package is the single source of truth: rubric numbers as data, a pure
 dependency-free scorer, JSON Schemas, and the golden vectors that double as

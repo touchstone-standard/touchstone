@@ -11,6 +11,6 @@ One file per proposal, named for its pull request number once it has one:
 
 ## Proposals
 
-- [0.2 input semantics](draft-02-input-semantics.md) — release authorized
-  September 6, 2026. The Chair's decision and reasons are recorded in the proposal
-  pull request before publication. The temporary filename awaits that PR number.
+- [TIP 0001: 0.2 input semantics](0001-input-semantics.md) — release authorized
+  September 6, 2026. [PR #1](https://github.com/touchstone-standard/touchstone/pull/1)
+  is the public record for the Chair's written decision and reasons.

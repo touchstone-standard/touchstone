@@ -1,8 +1,8 @@
-# TIP: 0.2 input semantics
+# TIP 0001: 0.2 input semantics
 
 Status: release authorized for Touchstone 0.2 on September 6, 2026 (npm 0.2.0).
-The Chair's written decision with reasons must be posted in the proposal PR
-before publication. Temporary filename pending that PR's number.
+Decision record: [proposal PR #1](https://github.com/touchstone-standard/touchstone/pull/1).
+The Chair's written decision with reasons is required there before publication.
 
 ## Motivation
 
