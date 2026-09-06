@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://touchstonestandard.org/schemas/0.1/score-result.schema.json",
+  "$id": "https://touchstonestandard.org/schemas/0.2/score-result.schema.json",
   "title": "Touchstone score result",
   "description": "The full show-your-work output of scoring an assessment: per-region deduction line items, region sub-scores, the binding (worse) side, points, and the resulting grade/label/band.",
   "type": "object",
@@ -8,7 +8,7 @@
   "required": ["rubric_id", "rubric_version", "points", "grade", "grade_label", "band", "binding_face", "binding_region", "faces", "line_items"],
   "properties": {
     "rubric_id": { "type": "string", "description": "Which rubric produced this result." },
-    "rubric_version": { "type": "string", "description": "SemVer of the rubric that produced this result." },
+    "rubric_version": { "type": "string", "description": "Two-part major.minor version of the rubric that produced this result; the npm package uses a separate three-part package version." },
     "points": { "type": "integer", "minimum": 0, "description": "The card's points: the worse of the two sides' side_points, floored to an integer." },
     "grade": {
       "enum": [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 10],

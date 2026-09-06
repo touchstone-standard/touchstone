@@ -1,0 +1,40 @@
+{
+  "status": "Synthetic stated-condition examples; not observations or a physical classifier.",
+  "cases": [
+    {
+      "id": "surface-gouge",
+      "condition": "A back-face surface-layer gouge, with no stock fold or break. Assume the existing dot extent class has already been established; a point annotation does not establish it.",
+      "permitted": { "region": "surface", "depth": "deep", "size": "dot", "x": 0.5, "y": 0.5 },
+      "expect": { "points": 965, "grade": 10 },
+      "excluded": [{ "region": "crease", "severity": "light", "x": 0.5, "y": 0.5 }],
+      "reason": "Surface-layer damage without a stock fold is not a crease."
+    },
+    {
+      "id": "intact-light-crease",
+      "condition": "A single light stock fold on the back face; the surface is intact and the card layers are not split.",
+      "permitted": { "region": "crease", "severity": "light", "x": 0.5, "y": 0.5 },
+      "expect": { "points": 425, "grade": 4 },
+      "excluded": [{ "region": "surface", "depth": "deep", "size": "dot", "x": 0.5, "y": 0.5 }],
+      "reason": "A light crease need not break the surface; the stock fold excludes deep."
+    },
+    {
+      "id": "through-layer-crease",
+      "condition": "A back-face crease that breaks through the card layers, causing a paper split along the fold.",
+      "permitted": { "region": "crease", "severity": "through_layers", "x": 0.5, "y": 0.5 },
+      "expect": { "points": 125, "grade": 1 },
+      "excluded": [{ "region": "surface", "depth": "deep", "size": "dot", "x": 0.5, "y": 0.5 }],
+      "reason": "The stock fold and split exclude deep; not every paper tear is a crease."
+    },
+    {
+      "id": "unsupported-dent",
+      "condition": "A localized back-face indentation with no stock fold and no surface-layer gouge; classified as a dent.",
+      "permitted": null,
+      "unsupported": { "region": "dent", "severity": "light", "x": 0.5, "y": 0.5 },
+      "excluded": [
+        { "region": "crease", "severity": "light", "x": 0.5, "y": 0.5 },
+        { "region": "surface", "depth": "deep", "size": "dot", "x": 0.5, "y": 0.5 }
+      ],
+      "reason": "No supported dent encoding or penalty is defined; neither a fold nor a gouge is stated."
+    }
+  ]
+}

@@ -9,6 +9,8 @@ a reference implementation and a conformance vector — is in
 One file per proposal, named for its pull request number once it has one:
 `0042-binding-region-tiebreak.md`.
 
-The directory is empty. That is accurate rather than embarrassing: the standard
-is new, and an empty list of proposals is a truthful statement about where it
-stands. The first one can be yours.
+## Proposals
+
+- [TIP 0001: 0.2 input semantics](0001-input-semantics.md) — accepted
+  September 6, 2026. [Chair's decision in PR #1](https://github.com/touchstone-standard/touchstone/pull/1#issuecomment-5561212134)
+  records the release approval and reasons for the bounded scope.
