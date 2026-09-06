@@ -9,6 +9,8 @@ a reference implementation and a conformance vector — is in
 One file per proposal, named for its pull request number once it has one:
 `0042-binding-region-tiebreak.md`.
 
-The directory is empty. That is accurate rather than embarrassing: the standard
-is new, and an empty list of proposals is a truthful statement about where it
-stands. The first one can be yours.
+## Local drafts
+
+- [0.2 input semantics](draft-02-input-semantics.md) — DRAFT, unpublished and
+  unaccepted. The temporary filename awaits an authorized public proposal PR
+  number. This entry records proposal work, not a Chair decision or release.

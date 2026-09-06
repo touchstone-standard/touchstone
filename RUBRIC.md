@@ -1,6 +1,9 @@
-# Touchstone 0.1
+# Touchstone 0.2 candidate
 
-Touchstone 0.1 is the open, reproducible standard for turning a card condition
+Unpublished proposal candidate. The proposed rules below are not an adopted
+release; see [the draft TIP](proposals/draft-02-input-semantics.md).
+
+Touchstone turns a card condition
 assessment — measured centering plus an enumerated list of defects — into a
 grade.
 Given the same enumeration, any implementation of this rubric produces the same
@@ -8,9 +11,8 @@ number: the arithmetic is the standard, not a proprietary black box. The referen
 implementation lives alongside this document as `scoring.mjs`, interpreting the
 data in `rubric.json`; this file is the human-readable prose version of the
 same rules. Philosophy: **forgive centering drift near mint, escalate as it
-becomes the card's defining flaw, and punish damage.** A card can drift off
-center and still be a 10; a crushed corner or a paper break cannot hide behind a
-good average.
+becomes the card's defining flaw, and punish damage.** The score reflects the
+encoded assessment; it does not verify whether damage was correctly identified.
 
 ## How a score is computed
 
@@ -194,8 +196,10 @@ coordinates (0–1 from the top-left of the face) — location is required here
 because, unlike a corner or edge, "surface" alone doesn't say where on the card.
 
 - **Depth** — `surface`: does not break the gloss (a scuff, a print line).
-  `scratch`: a visible line you can catch a fingernail on. `deep`: a crease or
-  break in the paper.
+  `scratch`: a visible line you can catch a fingernail on.
+  `deep`: surface-layer penetration (a gouge), without a stock fold or break.
+  A stock crease, including a light crease with an intact surface, is excluded
+  from `deep`; use the separate crease vocabulary when a crease is established.
 - **Size** — `dot`: about 2mm or less. `lt_1cm`: under 1cm. `lt_5cm`: under
   5cm. `full_card`: spans most of the card.
 
@@ -275,6 +279,12 @@ rung is already an absolute grade cap, not a generic front/back ratio.
 
 **Crease** (pools into the `surface` region bucket; `binding_region: "surface"` no
 longer implies scuff/scratch/deep-type wear specifically — it may be a crease):
+
+A crease is a stock fold or deformation along a fold, not a surface-layer
+gouge. `light` is a single light stock fold whose surface remains intact;
+`full_card` runs the full length of the card; `heavy` means multiple or more
+pronounced creases; `through_layers` is a crease that breaks through the card's
+layers (a paper split). A dent or an isolated tear is not automatically a crease.
 
 | Severity | light | full_card | heavy | through_layers |
 |---|---|---|---|---|
@@ -382,7 +392,7 @@ clears.
 
 ## Versioning
 
-This standard is **Touchstone 0.1**. Versions are two-part, `major.minor`;
+This candidate is **Touchstone 0.2**, not yet released. Versions are two-part, `major.minor`;
 there is no patch digit. One number everywhere — this prose, the rubric data's
 `rubric_version`, and the `$id` path the schemas are served from all carry it.
 That is the version to cite when you claim conformance.
@@ -396,7 +406,9 @@ the exact rules in force when it was computed. Per-set rubrics (e.g. a
 vintage-basketball override) are not special-cased code — they are new
 instances of `rubric-config.schema.json`, resolved by the framework's
 inheritance (`default → game → era/class → set`).
-Conformance with Touchstone 0.1 means passing `test/vectors.json`. **This
+The candidate retains `test/vectors.json` unchanged from 0.1 as its arithmetic
+conformance vectors. Passing them demonstrates arithmetic agreement, not correct
+physical classification. **This
 prose is normative.** The reference implementation and the golden vectors are
 *conformance evidence* — the executable demonstration that an implementation
 agrees with this document. Where they and this prose disagree, one of them
@@ -404,7 +416,79 @@ contains a bug: file it, decide which is wrong, and fix that one. Neither the
 implementation's internal ordering, its floating-point accumulation, nor the
 English text of its error messages is part of the standard.
 
-One known limitation is stated here rather than buried: the aggregation is a
-deliberate first-order approximation — a pure minimum, with no gap-credit or
-count-rule term. Whether it stays that way is a data-gated decision for a
-future revision.
+## Stated-condition contract examples
+
+These synthetic cases prescribe encodings given the stated facts. They are not
+real-card observations, training labels, or evidence of classification accuracy.
+All cases concern one back-face flaw with all other inputs ideal. The gouge's
+existing `dot` extent class is assumed; placing a point does not establish size.
+
+| Case | Stated condition | Permitted encoding | Excluded encodings | Points / grade |
+| --- | --- | --- | --- | --- |
+| surface-gouge | Surface-layer gouge; no stock fold or break; dot extent established | surface/deep/dot | crease/light | 965 / 10 |
+| intact-light-crease | Single light stock fold; surface intact, layers not split | crease/light | surface/deep/dot | 425 / 4 |
+| through-layer-crease | Crease with paper split through layers along the fold | crease/through_layers | surface/deep/dot | 125 / 1 |
+| unsupported-dent | Local indentation; no fold or surface-layer gouge | unsupported | crease/light, surface/deep/dot | No supported score |
+
+Executable counterparts are in `test/input-semantics.json`. Excluded encodings
+are wrong for those stated conditions but remain structurally valid inputs:
+`score()` cannot detect that a person or model supplied the wrong label. The
+tests check these examples, their correspondence to this table, and the removal
+of the old crease/paper-break meaning in both schema and prose. They supplement
+the arithmetic vectors; they do not make the scorer a physical classifier.
+
+## Implementation guidance (non-normative)
+
+Products may lead standard development by testing new workflows and versioned
+schemas on real cards. Their schemas need not match this assessment schema.
+Keep faithful mappings into a named published Touchstone version distinct from
+product-only evidence and experiments that change scoring meaning or arithmetic.
+Experiments can proceed before standard adoption; do not describe divergent
+experimental results as conforming to a published version they do not implement.
+Propose standard adoption with evidence when the interpretation is ready.
+
+Translate aliases into the existing region-specific vocabulary only when meaning
+is preserved. For example, an edge-wear label still needs a corner or edge and
+that region's severity; its name alone supplies neither. Preserve useful source
+subtypes. Emit one object per distinct flaw, not one per overlapping view of it.
+Shared coordinates do not prove two observations are the same flaw; the scorer
+sums supplied objects and performs no identity or geometric deduplication.
+
+Keep unresolved observations and confirmed foreign material separate from damage
+inputs. Excluding foreign material does not establish that the underlying surface
+is undamaged. Do not turn an unresolved observation or unsupported dent into a
+clean result by silently omitting it. A partial assessment is not a complete card inspection;
+omitted centering/print inputs and absent defects still receive ideal arithmetic
+defaults. No particular confirmation UI, capture method, or new input field is
+required by this guidance.
+
+Retain the source assessment and its product-schema version, the mapping version,
+the mapped assessment, and the exact rubric artifact/result version in the host's
+record. `score(input, rubric)` uses the passed rubric; it does not resolve or
+enforce the optional input `rubric` pin. Historical 0.1 inputs stay reproducible
+under their original artifacts and interpretation. Reinterpreting a physical
+finding creates a new assessment linked to the earlier one; never overwrite or
+relabel the old score. Existing deployed 0.1 consumers remain pinned until a
+separately approved integration. This guidance adds no required schema fields.
+
+## Known limitations and adoption evidence
+
+- Dents have no supported encoding or penalty. A tear without an established
+  crease also has no general mapping supplied by this correction. Preserve
+  unsupported observations rather than inventing a crease or edge-wear score.
+- The surface extent wording remains approximate: equality at boundaries, the
+  precise extent measure and the meaning of "most" are unresolved. No exact
+  2/10/50 mm partition or conversion from a point annotation is adopted here.
+- The centering ratios' measurement position/window remains unspecified. Curves
+  and quantization are unchanged; arithmetic agreement does not establish
+  equivalence between instruments or methods.
+- Physical anchor evidence, including borderline scratch versus gouge cases and
+  the reliable recognition of a light crease, remains necessary. Synthetic
+  fixtures establish logical consistency, not real-card validity or coverage.
+- Aggregation remains a first-order pure minimum, with no gap-credit or
+  count-rule term. Any change requires data and a future version.
+
+Proposal readiness is not adoption readiness. Real-card evidence and a decision
+on the intended supported scope must accompany the Chair's adoption decision
+under CONTRIBUTING. This candidate neither resolves all taxonomy questions nor
+waives any adopter's existing corpus or release gate.

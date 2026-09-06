@@ -23,7 +23,7 @@ const shape = (r) =>
   `${r.centering.front_curve ? "curve" : "scalar"} centering, ${r.print_attributes ? "print" : "no print"}`;
 
 const suites = [{
-  label: "Touchstone 0.1",
+  label: "Touchstone 0.2 candidate (frozen 0.1 arithmetic vectors)",
   rubric: await load("../rubric.json"),
   vectors: await load("./vectors.json"),
 }];

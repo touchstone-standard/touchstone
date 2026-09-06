@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://touchstonestandard.org/schemas/0.1/assessment-input.schema.json",
+  "$id": "https://touchstonestandard.org/schemas/0.2/assessment-input.schema.json",
   "title": "Touchstone assessment input",
   "description": "A card condition assessment: measured centering plus an enumerated list of defects per face, plus an optional per-face print-quality attribute block. Severity classes are defined in $defs.severity (corner/edge) and $defs.crease_severity / stain_severity / print_defect_severity (their own disjoint ladders).",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "rubric": { "type": "string", "description": "Optional rubric pin as rubric_id@version, e.g. 'default@0.3.0'. Omit for the latest default rubric." },
+    "rubric": { "type": "string", "description": "Optional rubric pin as rubric_id@version, e.g. 'default@0.2'. A host resolves this pin; score(input, rubric) uses its explicit rubric argument and does not resolve or enforce this field. Retain the actual rubric artifact and result version for reproduction." },
     "subject": {
       "type": "object", "additionalProperties": false,
       "description": "OPTIONAL card identity, e.g. game 'pokemon', set 'Base Set', number '4', name 'Charizard'. Never scored: it affects no deduction, sub-score, or grade.",
@@ -22,7 +22,7 @@
     },
     "crease_severity": {
       "enum": ["light", "full_card", "heavy", "through_layers"],
-      "description": "Crease severity (region=crease; pools into the surface result bucket). Disjoint from $defs.severity — e.g. 'minor' is NOT a valid crease severity even though it's valid for corner/edge/print_defect. light: a single light crease, doesn't break the surface. full_card: a crease running the full length of the card. heavy: multiple or more pronounced creases. through_layers: the crease breaks through the card's layers (a paper split)."
+      "description": "Crease severity (region=crease; pools into the surface result bucket). A crease is a stock fold or deformation along a fold, not a surface-layer gouge. Disjoint from $defs.severity — e.g. 'minor' is NOT a valid crease severity even though it's valid for corner/edge/print_defect. light: a single light stock fold whose surface remains intact. full_card: a crease running the full length of the card. heavy: multiple or more pronounced creases. through_layers: the crease breaks through the card's layers (a paper split). A dent or an isolated tear is not automatically a crease. The scorer validates supplied words, not the physical condition."
     },
     "stain_severity": {
       "enum": ["very_slight", "slight", "obvious", "heavy"],
@@ -67,7 +67,7 @@
         "corner": { "enum": ["tl", "tr", "bl", "br"], "description": "Which corner (required when region=corner): tl=top-left, tr=top-right, bl=bottom-left, br=bottom-right." },
         "edge": { "enum": ["top", "right", "bottom", "left"], "description": "Which edge (required when region=edge)." },
         "severity": { "type": "string", "description": "Region-specific severity word. corner/edge share $defs.severity (de_minimis/minor/moderate/heavy). crease/stain/print_defect each define their OWN vocabulary — see $defs.crease_severity / stain_severity / print_defect_severity respectively — enforced below by the allOf/if/then blocks keyed on `region`." },
-        "depth": { "enum": ["surface", "scratch", "deep"], "description": "Surface defects only. surface: does not break the gloss (scuff, print line). scratch: a visible line you can catch a fingernail on. deep: a crease or break in the paper." },
+        "depth": { "enum": ["surface", "scratch", "deep"], "description": "Surface defects only. surface: does not break the gloss (scuff, print line). scratch: a visible line you can catch a fingernail on. deep: surface-layer penetration (a gouge), without a stock fold or break. A stock crease, including a light crease with an intact surface, is excluded from deep; use the separate crease vocabulary when a crease is established. No dent mapping is defined. See RUBRIC.md for stated-condition examples and unresolved distinctions." },
         "size": { "enum": ["dot", "lt_1cm", "lt_5cm", "full_card"], "description": "Surface defects only. dot: ~2mm or less. lt_1cm: under 1cm. lt_5cm: under 5cm. full_card: spans most of the card." },
         "x": { "type": "number", "minimum": 0, "maximum": 1 },
         "y": { "type": "number", "minimum": 0, "maximum": 1 },
