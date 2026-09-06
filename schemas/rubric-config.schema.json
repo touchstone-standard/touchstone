@@ -36,7 +36,7 @@
     "grade_band_points": { "type": "integer", "minimum": 1, "description": "Width of a grade-ladder band in points. raw = floor(points / grade_band_points) × 0.5." },
     "centering": {
       "type": "object",
-      "description": "Centering-penalty parameters. Deviation is the max-axis offset from 50/50, quantized before scoring. Two supported forms: scalar per-face slopes, or per-face piecewise-linear curves. The published default 0.1 and candidate default 0.2 both use curves. A scalar slope s is exactly the one-segment curve [{ up_to: null, slope: s }].",
+      "description": "Centering-penalty parameters. Deviation is the max-axis offset from 50/50, quantized before scoring. Two supported forms: scalar per-face slopes, or per-face piecewise-linear curves. The default rubrics in both 0.1 and 0.2 use curves. A scalar slope s is exactly the one-segment curve [{ up_to: null, slope: s }].",
       "oneOf": [
         {
           "additionalProperties": false,

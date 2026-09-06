@@ -1,8 +1,8 @@
-# Draft TIP: 0.2 input semantics
+# TIP: 0.2 input semantics
 
-Status: DRAFT — unpublished candidate, no Chair decision or release approval.
-Date: September 6, 2026. Temporary filename; rename to the public PR number only
-after authorization to open that proposal. Target standard 0.2; npm 0.2.0.
+Status: release authorized for Touchstone 0.2 on September 6, 2026 (npm 0.2.0).
+The Chair's written decision with reasons must be posted in the proposal PR
+before publication. Temporary filename pending that PR's number.
 
 ## Motivation
 
@@ -12,13 +12,14 @@ surface on the back: `surface/deep/dot` produces 965 points/grade 10, whereas
 `crease/light` produces 425/4. The arithmetic is deterministic; overlapping
 definitions permit contradictory encodings of the stated physical condition.
 
-This is a synthetic counterexample, not a presented real card. Representative
-real-card evidence, including borderline cases, remains an adoption dependency.
-The draft does not claim to have met that empirical need by executing examples.
+This is a synthetic counterexample, not a presented real card. The bounded
+release resolves the conflicting stated-input meanings; it makes no claim that
+representative real-card evidence or borderline physical anchors have been
+established. Those remain empirical work for subsequent refinement.
 
 ## Specification
 
-The candidate changes `RUBRIC.md` and schema descriptions together: `deep` means
+Version 0.2 changes `RUBRIC.md` and schema descriptions together: `deep` means
 surface-layer penetration (a gouge), without a stock fold or break. A crease is
 a stock fold or deformation along a fold. A light crease retains an intact
 surface; through-layer severity requires a crease with a split through layers.
@@ -59,7 +60,8 @@ example demonstrates. Preserve original 0.1 assessments and artifacts; create
 linked new assessments rather than silently recoding history. Keep source schema,
 mapping and actual rubric identities in the host record, without requiring new
 Touchstone fields. `score()` uses its explicit rubric argument, not the input pin.
-Existing hosted and product 0.1 consumers require a later coordinated integration.
+Consumers adopt the new version explicitly; releasing the standard does not
+automatically migrate existing product assessments or version pins.
 
 ## Reference Implementation
 
@@ -69,11 +71,15 @@ all other rubric configuration; `test/scoring.test.mjs` runs the original vector
 `test/input-semantics.test.mjs` checks the corrected definitions in prose/schema,
 the normative example table and executable encodings, their numeric consequences,
 and the scorer's inability to reject structurally valid excluded interpretations.
-Run `npm test`; the same support files ship in the candidate package.
+Run `npm test`; the same support files ship in the package.
 
 The distinguishing evidence is semantic-contract evidence: 0.1's definition
 permits a crease as `deep`, while this proposal excludes it. It is not a changed
-numeric result for identical encoded input. The Chair must assess this evidence
-against CONTRIBUTING's distinguishing-vector requirement before any final TIP.
-Domain review and real-card evidence must establish the intended supported scope
-and remaining limitations. Proposal readiness does not imply adoption readiness.
+numeric result for identical encoded input. The bounded release decision accepts
+the stated-condition examples and executable definition checks as distinguishing
+evidence for this semantic correction, while preserving the numeric vectors.
+Conformance under CONTRIBUTING remains passing the version's `test/vectors.json`;
+it attests to arithmetic behavior, not correct physical mapping. No new condition
+is added to the licensing or trademark commitment. Real-card anchors, dents,
+extent and centering measurement questions remain explicitly unresolved; approval
+of this correction does not establish physical classification validity.

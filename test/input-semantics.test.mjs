@@ -43,8 +43,10 @@ for (const example of examples.cases) {
       const result = score({ back: { defects: [example.permitted] } }, rubric);
       assert.equal(result.points, example.expect.points);
       assert.equal(result.grade, example.expect.grade);
+      assert.equal(cells[5], `${result.points} / ${result.grade}`, "displayed points/grade must match the scorer");
     } else {
       assert.throws(() => score({ back: { defects: [example.unsupported] } }, rubric), ScoreError);
+      assert.equal(cells[5], "No supported score");
     }
     for (const excluded of example.excluded) {
       assert.doesNotThrow(() => score({ back: { defects: [excluded] } }, rubric));

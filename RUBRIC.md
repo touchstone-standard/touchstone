@@ -1,7 +1,7 @@
-# Touchstone 0.2 candidate
+# Touchstone 0.2
 
-Unpublished proposal candidate. The proposed rules below are not an adopted
-release; see [the draft TIP](proposals/draft-02-input-semantics.md).
+September 6, 2026. See the [input-semantics proposal](proposals/draft-02-input-semantics.md)
+and [changelog](CHANGELOG.md) for the scope and reasons for this release.
 
 Touchstone turns a card condition
 assessment — measured centering plus an enumerated list of defects — into a
@@ -392,7 +392,7 @@ clears.
 
 ## Versioning
 
-This candidate is **Touchstone 0.2**, not yet released. Versions are two-part, `major.minor`;
+This standard is **Touchstone 0.2**. Versions are two-part, `major.minor`;
 there is no patch digit. One number everywhere — this prose, the rubric data's
 `rubric_version`, and the `$id` path the schemas are served from all carry it.
 That is the version to cite when you claim conformance.
@@ -406,10 +406,14 @@ the exact rules in force when it was computed. Per-set rubrics (e.g. a
 vintage-basketball override) are not special-cased code — they are new
 instances of `rubric-config.schema.json`, resolved by the framework's
 inheritance (`default → game → era/class → set`).
-The candidate retains `test/vectors.json` unchanged from 0.1 as its arithmetic
-conformance vectors. Passing them demonstrates arithmetic agreement, not correct
-physical classification. **This
-prose is normative.** The reference implementation and the golden vectors are
+Conformance with Touchstone 0.2 means passing `test/vectors.json`, as provided
+by CONTRIBUTING's versioned conformance commitment. Those arithmetic vectors
+are unchanged from 0.1. This claim attests to an implementation's arithmetic
+behavior; it does not attest to the physical truth of an assessment, observer
+or model accuracy, or complete inspection of a card. The semantic examples below
+explain the meanings of inputs; they add no physical-classification test to that
+conformance claim. The existing licensing and trademark commitments are unchanged.
+**This prose is normative.** The reference implementation and the golden vectors are
 *conformance evidence* — the executable demonstration that an implementation
 agrees with this document. Where they and this prose disagree, one of them
 contains a bug: file it, decide which is wrong, and fix that one. Neither the
@@ -443,8 +447,10 @@ Products may lead standard development by testing new workflows and versioned
 schemas on real cards. Their schemas need not match this assessment schema.
 Keep faithful mappings into a named published Touchstone version distinct from
 product-only evidence and experiments that change scoring meaning or arithmetic.
-Experiments can proceed before standard adoption; do not describe divergent
-experimental results as conforming to a published version they do not implement.
+Experiments can proceed before standard adoption. Identify arithmetic that diverges
+from a published version and test any versioned conformance claim against its vectors.
+An arithmetic conformance claim does not establish that an experimental physical
+mapping follows the published definitions; describe that distinction explicitly.
 Propose standard adoption with evidence when the interpretation is ready.
 
 Translate aliases into the existing region-specific vocabulary only when meaning
@@ -468,10 +474,11 @@ record. `score(input, rubric)` uses the passed rubric; it does not resolve or
 enforce the optional input `rubric` pin. Historical 0.1 inputs stay reproducible
 under their original artifacts and interpretation. Reinterpreting a physical
 finding creates a new assessment linked to the earlier one; never overwrite or
-relabel the old score. Existing deployed 0.1 consumers remain pinned until a
-separately approved integration. This guidance adds no required schema fields.
+relabel the old score. A standard release does not automatically migrate a
+consumer's existing 0.1 pin; each consumer adopts it explicitly. This guidance
+adds no required schema fields.
 
-## Known limitations and adoption evidence
+## Known limitations and evidence still needed
 
 - Dents have no supported encoding or penalty. A tear without an established
   crease also has no general mapping supplied by this correction. Preserve
@@ -488,7 +495,8 @@ separately approved integration. This guidance adds no required schema fields.
 - Aggregation remains a first-order pure minimum, with no gap-credit or
   count-rule term. Any change requires data and a future version.
 
-Proposal readiness is not adoption readiness. Real-card evidence and a decision
-on the intended supported scope must accompany the Chair's adoption decision
-under CONTRIBUTING. This candidate neither resolves all taxonomy questions nor
-waives any adopter's existing corpus or release gate.
+Version 0.2 adopts a bounded correction to the stated-input contract. It does not
+establish empirical grading validity or broader physical coverage. Representative
+real-card evidence remains necessary to evaluate the unresolved distinctions
+above. This release neither resolves all taxonomy questions nor waives any
+adopter's existing corpus or release gate.

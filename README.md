@@ -1,8 +1,7 @@
 # @touchstonestandard/rubric
 
-Touchstone 0.2 — unpublished proposal candidate (npm identity `0.2.0`).
-Published 0.1 remains the released baseline; this checkout does not update hosted
-consumers or announce a release. See the [draft TIP](proposals/draft-02-input-semantics.md)
+Touchstone 0.2 — the open standard for card condition scoring (npm `0.2.0`).
+See the [input-semantics proposal](proposals/draft-02-input-semantics.md)
 and [implementer-impact note](CHANGELOG.md).
 This package is the single source of truth: rubric numbers as data, a pure
 dependency-free scorer, JSON Schemas, and the golden vectors that double as
@@ -32,13 +31,14 @@ npm test
 Node, the browser, and Cloudflare Workers.
 It cannot verify the physical classification of a flaw. Synthetic semantic
 examples state their physical assumptions; their passing tests are not real-card
-accuracy evidence. The candidate changes deep/crease meaning, not penalties.
+accuracy evidence. Version 0.2 changes deep/crease meaning, not penalties.
 
 ## Consumers
 
 - **A hosted web calculator** — imports `scoring.mjs` and `rubric.json`
   directly. A hosted consumer must pin and serve matching artifacts for the
-  published version it claims; this local candidate leaves existing 0.1 pins alone.
+  published version it claims. Other consumers adopt a new version explicitly;
+  releasing the standard does not automatically migrate their existing pins.
 - **A hosted MCP server** — exposes `score_card`, `get_rubric`, and
   `list_defect_types` as tools so people can grade cards through an AI chat.
   **Account-gated**: the hosted endpoint requires a free account API key
@@ -46,8 +46,9 @@ accuracy evidence. The candidate changes deep/crease meaning, not penalties.
   package and reference scorer here remain runnable by anyone with zero
   account.
 - **`test/vectors.json`** — the golden vectors, run via `node --test`; passing
-  them demonstrates arithmetic conformance for the named published version.
-  Candidate semantic-contract evidence is separate; 0.2 has not been adopted.
+  them defines versioned conformance under CONTRIBUTING. That claim attests to
+  arithmetic behavior, not physical classification or a card's assessment accuracy.
+  Semantic-contract examples explain input meanings separately.
 
 ## File map
 

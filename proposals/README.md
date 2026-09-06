@@ -9,8 +9,8 @@ a reference implementation and a conformance vector — is in
 One file per proposal, named for its pull request number once it has one:
 `0042-binding-region-tiebreak.md`.
 
-## Local drafts
+## Proposals
 
-- [0.2 input semantics](draft-02-input-semantics.md) — DRAFT, unpublished and
-  unaccepted. The temporary filename awaits an authorized public proposal PR
-  number. This entry records proposal work, not a Chair decision or release.
+- [0.2 input semantics](draft-02-input-semantics.md) — release authorized
+  September 6, 2026. The Chair's decision and reasons are recorded in the proposal
+  pull request before publication. The temporary filename awaits that PR number.
