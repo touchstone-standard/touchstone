@@ -1,52 +1,51 @@
 # Changelog
 
-## 0.2 — September 6, 2026
+## 0.3 — September 14, 2026
 
-### What changed and why
+Accepted by the Chair in TIP 0003. Rubric
+`0.3`; package metadata `0.3.0`. See the [TIP 0003](proposals/0003.md).
 
-Touchstone now distinguishes a surface-layer gouge from a stock crease. The
-earlier definition of `surface/deep` also described a crease or paper break,
-overlapping the separate crease category. `deep` now means surface-layer
-penetration without a stock fold or break. A light crease can have an intact
-surface; a dent or isolated tear is not automatically a crease.
+### Scoring and inputs
 
-The release adds examples of permitted and excluded encodings, clarifies aliases
-and one object per distinct flaw, and explains how products can develop their own
-schemas and experiments ahead of standard adoption. Faithful mappings into a
-published version remain distinct from experimental scoring interpretations.
+All six defect channels require `de_minimis`, `minor`, `moderate`, `severe`.
+Surface scores severity with factors 0.25/0.5/1/2 against its existing depth-by-size
+basis. The complete product, including face multiplier, rounds once. Missing
+severity and old channel-specific severity words fail.
 
-### Effect on scores and existing assessments
+Corner/edge numbers are retained, with top rung `severe`. Crease uses
+575/675/775/875; front stain 675/725/775/875; back stain 75/275/475/775;
+print defect 25/75/275/675. No second generic face multiplier applies to these
+absolute tables. Crease extent no longer supplies an ordinal severity.
 
-No penalties, centering curves, multipliers, grade bands or aggregation rules
-changed. The scorer and original arithmetic vectors are unchanged. Identical
-encoded assessments produce identical numeric results; the version metadata
-changes to 0.2 (npm package 0.2.0).
+Centering, depth/size basis, print attributes, region sums, floor, bottleneck,
+tie order, grade ladder and condition bands remain unchanged. The specification
+incorporates the 0.2 errata explanations: positive half-up rounding, additive
+global/local print deductions, and the corner/edge-only scope of the de-minimis
+grade-10 rule. No independent hard grade ceiling is introduced.
 
-Classifying a physical finding differently can still change a new score. For
-example, a back-face light crease scores 425 points / grade 4; the old overlapping
-`surface/deep/dot` encoding scores 965 / 10. These are different encodings, not a
-change to the penalty tables. Preserve original assessments and rubric artifacts;
-record a new linked assessment when reinterpreting a finding. Consumers adopt
-the new version explicitly; existing 0.1 pins do not migrate automatically.
+### Implementer impact and existing grades
 
-### What this release does not establish
+An old back `scratch/lt_1cm` without severity yielded 945 / grade 9 under 0.2;
+it is invalid under 0.3. A new minor judgment yields 972 / 10; severe yields
+890 / 8.5. An old surface scorer may ignore an added severity field, so hosts
+must dispatch by explicit version. Distinguishing vectors pin the new deduction
+and refusal independently of version metadata.
 
-Passing the version's arithmetic vectors defines conformance under CONTRIBUTING.
-It does not verify physical classification, observer/model accuracy or a complete
-card inspection. The new examples are synthetic stated conditions, not real-card
-accuracy evidence. Dents, some tear classifications, exact extent boundaries,
-centering measurement position/window and borderline physical anchors remain
-unresolved. No new empirical accuracy or full-coverage claim accompanies 0.2.
+Adopt matching code, rubric and schemas, capture explicit severity, and freeze
+old execution before changing defaults. There is no lossless ordinal mapping of
+old crease/stain/print severities or missing surface severity. Accepted grades
+remain unchanged; reinterpretation is a new identified assessment/result.
 
-Sources: [0.2 specification](https://github.com/touchstone-standard/touchstone/blob/main/RUBRIC.md),
-[input-semantics proposal and decision](https://github.com/touchstone-standard/touchstone/pull/1),
-[conformance and contribution rules](https://github.com/touchstone-standard/touchstone/blob/main/CONTRIBUTING.md).
+### Evidence and publication
 
-## 0.1 — July 28, 2026
+The standalone suite includes fixed vectors and synthetic input-meaning examples.
+No empirical physical-accuracy, observer-agreement or competitor-equivalence claim
+is made. Numeric policy adoption by a product is distinct from the upstream Chair's
+written decision and publication. No public commit or registry identity has been
+invented for this candidate.
 
-Initial public-repository baseline: the scoring rubric, reference scorer, JSON
-schemas and arithmetic conformance vectors. The date is the baseline commit
-date; it is not a claim about a separate package-registry publication timestamp.
+## Historical releases
 
-The original artifacts remain available for reproducing 0.1 assessments.
-Source: [Touchstone 0.1 baseline](https://github.com/touchstone-standard/touchstone/tree/55ad2fc8ea0a4a43c38079c428c32f4e15d9eebe).
+0.2, September 6, 2026, narrowed gouge versus stock-crease meaning without changing
+arithmetic. 0.1 was the initial release. Their published artifacts/tags remain
+unchanged; this package does not replace their frozen execution or stored results.

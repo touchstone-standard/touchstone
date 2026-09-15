@@ -1,502 +1,158 @@
-# Touchstone 0.2
+# Touchstone 0.3
 
-September 6, 2026. See the [input-semantics proposal](proposals/0001-input-semantics.md)
-and [changelog](CHANGELOG.md) for the scope and reasons for this release.
+September 14, 2026. Accepted normative specification for Touchstone `0.3`, package `0.3.0`. See [TIP 0003](proposals/0003.md), [changelog](CHANGELOG.md) and [preparation provenance](CANDIDATE.json).
 
-Touchstone turns a card condition
-assessment — measured centering plus an enumerated list of defects — into a
-grade.
-Given the same enumeration, any implementation of this rubric produces the same
-number: the arithmetic is the standard, not a proprietary black box. The reference
-implementation lives alongside this document as `scoring.mjs`, interpreting the
-data in `rubric.json`; this file is the human-readable prose version of the
-same rules. Philosophy: **forgive centering drift near mint, escalate as it
-becomes the card's defining flaw, and punish damage.** The score reflects the
-encoded assessment; it does not verify whether damage was correctly identified.
+Touchstone turns an encoded card-condition assessment into points and a grade. Its open arithmetic does not determine whether an assessment is physically true, complete, or obtained with an accurate instrument. MUST, MUST NOT and MAY identify requirements and permissions. The numeric rules below describe the supplied `default` rubric; custom configurations are addressed separately.
 
-## How a score is computed
+## Input and version selection
 
-1. Each region — `centering`, `corners`, `edges`, `surface`, and (config-gated)
-   `print` — starts at the base score, **1000** (the flawless ceiling),
-   separately per face. In plain terms: every face begins as a perfect card,
-   judged four ways under a rubric with no `print_attributes` table, five under
-   one that defines it (see Print quality below).
-2. Every defect and every non-zero centering deviation subtracts a penalty from
-   its region. A region's sub-score is `1000 − Σ(penalties)`, **floored at 0** — a
-   region can't go negative no matter how many defects stack. In plain terms:
-   each flaw takes points off the category it belongs to, and a category can be
-   emptied but never owes points.
-3. A face's `side_points` is the **minimum of its region sub-scores** (four
-   without a `print_attributes` table, five with one)
-   — the worst region caps the whole side. In plain terms: a face is only as
-   good as its worst category.
-4. The card's `points` is the **worse of the two sides** (pure bottleneck — a
-   flawless back cannot rescue a damaged front). In plain terms: the card is
-   only as good as its worse face. Which face that is, and how a tie between
-   them resolves, is specified in *Binding face and binding region* below.
-5. `points` is floored to an integer before the ladder (custom rubrics may
-   produce fractional penalties; the ladder only ever sees whole numbers). In
-   plain terms: fractions are dropped before grading.
-6. The ladder converts points to a grade: `raw = floor(points / 50) × 0.5`, then
-   `grade = raw ≥ 9.5 ? 10 : max(raw, 1)`. The 9.5 slot is deliberately promoted
-   to 10 — the market's 9→10 value cliff, expressed as arithmetic. Grade never
-   reports below 1. In plain terms: every 50 points is half a grade; 950 or better is a
-   10 because the 9.5 slot is promoted.
+An assessment is an object with optional `front`, `back`, `subject` and `rubric` properties. A face may contain `centering`, `defects` and `print`. The schemas in `schemas/` define interchange shapes. Hosts MUST validate against the selected version's schemas; `score(input, rubric)` is not a complete JSON Schema validator. For example, it rejects unknown top-level keys but does not enforce every nested `additionalProperties` constraint.
 
-### Binding face and binding region
+The optional `rubric` input string is a host-resolved pin, such as `default@0.3`. The low-level function uses its explicit rubric argument and neither resolves nor enforces that input string. A host MUST select matching code, schema and rubric and retain their identity with the assessment/result. Unknown versions MUST NOT alias the current version. `subject` and defect annotations do not affect arithmetic.
 
-A score result MUST name the face and the region that produced the grade.
+An omitted face, centering axis, defect list, print block or print attribute contributes no deduction. These mathematical defaults do not assert that the omitted observation was inspected. Physical-inspection completeness belongs to the producer. Missing severity on a present defect is an error.
 
-The **binding face** is the face with the lower `side_points`. **Ties MUST
-resolve to the front.**
+## Aggregation and grade conversion
 
-The **binding region** is the lowest-scoring region *on the binding face*.
-**Ties MUST resolve to the earliest region** in the fixed order
-`centering → corners → edges → surface → print`, where `print` participates
-only when the rubric enables the print-attribute ladders. This order is
-normative: two implementations that disagree on a tie produce different
-`binding_region` values for the same card and are not interoperable.
+1. Each face starts with 1000 points in each scored region: `centering`, `corners`, `edges`, `surface`, and `print` when the rubric has print attributes.
+2. All deductions in a face's region sum. The region score is `max(0, 1000 - sum)`.
+3. A face's `side_points` is the minimum of its region scores. Card `points` is the minimum of both faces' `side_points`, floored to an integer.
+4. `raw = floor(points / 50) * 0.5`, then `grade = raw >= 9.5 ? 10 : max(raw, 1)`. There is no reported grade 9.5.
+5. Choose the condition band by the highest applicable minimum grade: `NM >= 9`, `LP >= 7`, `MP >= 5`, `HP >= 3`, `DMG >= 1`.
+
+The binding face is the face with fewer side points; ties MUST resolve to front. The binding region is the lowest-scoring region on that face; ties MUST resolve in this order: `centering`, `corners`, `edges`, `surface`, `print`.
+
+The result MUST expose rubric identity, points, grade, condition band, binding face/region, both faces' region scores and deduction line items. Each item's face, scored region, penalty and optional print-attribute identity carry scoring meaning. Line-item order, human-readable `detail` and `grade_label` are non-normative presentation. Conformance may compare line items as a multiset, without depending on reference traversal order.
 
 ## Centering
 
-Centering is a measurement, not a defect list entry. Per face, you supply
-`lr_pct` (the left border's share of left+right border width) and `tb_pct` (the
-top border's share of top+bottom); 50.0 is perfectly centered on that axis.
+`lr_pct` is the left border's share of left-plus-right border width; `tb_pct` is the top border's share of top-plus-bottom border width. Each is a finite number from 0 to 100. Fifty is centered. The precise measurement position/window is not specified by this version.
 
-- **Deviation** is the **larger** of the two axis offsets from 50:
-  `deviation = max(|lr_pct − 50|, |tb_pct − 50|)`. Deviation is the max axis, not
-  the sum of both axes — a card off on only one axis isn't punished twice.
-- Inputs are accepted at any precision but **quantized to 0.1 point** before
-  scoring, for determinism.
-- The penalty is a **progressive, piecewise-linear curve** per face. Each curve
-  is a list of segments `{ up_to, slope }`, sorted ascending; a segment spans from the
-  previous segment's `up_to` (0 for the first) to its own, and the final
-  segment is open-ended (`up_to: null`). The penalty **accumulates
-  `slope × span` across every segment the deviation crosses**, then is
-  **rounded half-up ONCE at the end** — **not** banker's rounding (JavaScript's
-  default `Math.round` and Python's `round()` both round half-to-even in some
-  cases; this rubric always rounds an exact `.5` *up*). Concretely:
-  `penalty = floor(Σ slopeᵢ × spanᵢ + 0.5)`. A scalar slope `s` is exactly the
-  one-segment curve `[{ up_to: null, slope: s }]`, so the two forms share one
-  semantics.
+Quantize each absolute offset from 50 to the nearest 0.1 percentage point with half-up ties, then take the larger offset. The axes MUST NOT be added. Accumulate slope times span through the applicable curve, starting at zero:
 
-  **Front curve** (deviation in percentage points):
+| Front deviation interval | Slope (points per percentage point) |
+| --- | ---: |
+| 0 to 10 | 10 |
+| 10 to 15 | 15 |
+| 15 to 20 | 20 |
+| 20 to 30 | 12 |
+| 30 to 35 | 20 |
+| Above 35 | 40 |
 
-  | Segment | Slope (pts/pt) | Penalty at segment end |
-  |---|---|---|
-  | 0 → 10 | 10 | 100 |
-  | 10 → 15 | 15 | 175 |
-  | 15 → 20 | 20 | 275 |
-  | 20 → 30 | 12 | 395 |
-  | 30 → 35 | 20 | 495 |
-  | 35 → ∞ | 40 | — |
+| Back deviation interval | Slope |
+| --- | ---: |
+| 0 to 40 | 2 |
+| Above 40 | 10 |
 
-  **Back curve:**
+Round the accumulated nonnegative penalty half-up once using `floor(value + 0.5)`. The generic front defect multiplier does not apply to centering. Quantization precedes curve evaluation; intermediate segments are not rounded. JavaScript `Math.round` rounds exact positive ties upward, not to even. Implementations must reproduce the supplied vectors, including binary-floating-point boundary cases.
 
-  | Segment | Slope (pts/pt) | Penalty at segment end |
-  |---|---|---|
-  | 0 → 40 | 2 | 80 |
-  | 40 → ∞ | 10 | — |
+Examples: front 55/45 yields penalty 50, 950 points and grade 10; front 60/40 yields 100, 900 and 9; front 65/35 yields 175, 825 and 8. Front deviation 10.3 accumulates 104.5, rounds to 105, and yields 895 / 8.5. Back 90/10 yields 80, 920 and 9. Equal centering penalties on both faces bind to front.
 
-- **Why these knees.** The curve is shaped to the philosophy above: drift near
-  mint is forgiven, and each knee is a point at which off-centering stops being
-  a quibble and starts being the thing you notice about the card. Read out as
-  border ratios, a card whose *only* flaw is centering grades:
+## Common severity and classification
 
-  | Front border ratio | Deviation | Penalty | Points | Grade |
-  |---|---|---|---|---|
-  | 55/45 | 5 | 50 | 950 | **10** |
-  | 60/40 | 10 | 100 | 900 | **9** |
-  | 65/35 | 15 | 175 | 825 | **8** |
-  | 70/30 | 20 | 275 | 725 | **7** |
-  | 80/20 | 30 | 395 | 605 | **6** |
-  | 85/15 | 35 | 495 | 505 | **5** |
-  | 90/10 | 40 | 695 | 305 | **3** |
+Every defect MUST contain exactly one of these severity identifiers:
 
-  Each knee sits where a round border ratio lands on a whole grade: 60/40 at 9,
-  65/35 at 8, 70/30 at 7, 80/20 at 6, 85/15 at 5. No round ratio falls between
-  85/15 and 90/10, which is why the table steps from 5 straight to 3.
+| Identifier | Display | Meaning within the established damage type |
+| --- | --- | --- |
+| `de_minimis` | De-minimis | Faintest established damage, requiring close inspection or angled light |
+| `minor` | Minor | Definite local damage |
+| `moderate` | Moderate | Readily apparent damage with a substantial effect on affected material or appearance |
+| `severe` | Severe | Pronounced damage with major material disruption or appearance loss |
 
-  The back is judged far more gently, because the reverse border is not what a
-  collector is looking at:
+There is no `heavy` alias in 0.3. Legacy `light`, `full_card`, `through_layers`, `very_slight`, `slight`, `obvious` and `blemish` are not severity values either. `full_card` remains a valid *surface size* value.
 
-  | Back border ratio | Deviation | Penalty | Points | Grade |
-  |---|---|---|---|---|
-  | 75/25 | 25 | 50 | 950 | **10** |
-  | 90/10 | 40 | 80 | 920 | **9** |
+Severity expresses increasing intensity within the established type, not equal impact across types, measured depth, or extent class. Changing length alone must not create a new severity judgment. Surface depth and size are already scored separately: do not increase severity solely because the same evidence selected a deeper class or larger size. This version supplies no calibrated quantitative severity thresholds or assertion that independent observers agree on the anchors.
 
-  Past the last rows on either table — front 90/10, back 90/10 — the curves
-  escalate steeply (40 and 10 pts/pt): centering that bad is the card's
-  defining flaw, and the grade should say so.
-- Worked GEM cutoffs: front **45/55** → deviation 5.0 → penalty `50` → 950
-  points → still 10; one tenth worse (44.9/55.1) → deviation 5.1 → `51` → 949
-  → drops to 9. Back **75/25** → deviation 25.0 → `50` → 950 → still 10; the
-  gentle back slope (2/pt) plus half-up rounding holds GEM through 75.2/24.8
-  (deviation 25.2 → 50.4 → rounds to `50` → 950) and breaks it at 75.3/24.7
-  (deviation 25.3 → 50.6 → `51` → 949 → 9).
-- Knee-crossing example (also the single-round rule): front deviation 10.1
-  → `10 × 10 + 0.1 × 15 = 101.5` → rounded once, half-up → `102` → 898 points
-  → grade 8.5. Rounding an exact accumulated `.5` **up**: front deviation 10.3
-  → `100 + 0.3 × 15 = 104.5` → `105` → 895 → 8.5 (half-to-even would have
-  given 104).
+Each distinct physical flaw is one defect object. Multiple distinct flaws may share a location and their penalties sum. A second view or confirmation does not by itself create another flaw. Do not enter both a legacy penalty and a common-severity penalty for the same finding. Physical identity and counting remain assessment responsibilities.
 
-## Corner & edge defects
+Foreign material, unresolved hypotheses and not-observed findings are not established damage. The producer must preserve unresolved evidence without inventing severity. A surface wrinkle, dent, printing feature or uncertain mark must not automatically become a crease.
 
-Every corner (`tl`/`tr`/`bl`/`br`) and edge (`top`/`right`/`bottom`/`left`)
-defect is classified into one of four severity classes:
+## Corner and edge defects
 
-- **de minimis** — faint whitening only visible up close or under angled
-  light. The GEM budget is **face-dependent**, because front penalties carry
-  the ×1.3 multiplier: a GEM card may keep **three** de-minimis in a back
-  region (the fourth breaks GEM), but only **two** in a front region (the
-  third breaks GEM). This matches the empirical finding that top-grade
-  cards routinely carry a few flagged-but-forgiven dings, while holding
-  the front to the stricter standard the multiplier implies.
-- **minor** — visible at arm's length but small: visible whitening or a small
-  nick, a soft corner touch.
-- **moderate** — obvious at a glance: the corner point is flattened or rounded
-  but the card layers are intact.
-- **heavy** — structural: layers visibly separated, frayed, or the corner is
-  fully blunted/bent.
+`region=corner` requires `corner=tl/tr/bl/br` and severity. `region=edge` requires `edge=top/right/bottom/left` and severity. Optional coordinates are finite numbers between 0 and 1 from the top-left of the face. Coordinates and locator choice do not alter deductions.
 
-The GEM boundary is a deliberate construction: **only de-minimis flaws can
-keep a 10.** The mildest *minor* defect in the rubric — a minor edge on the
-back, penalty 51 — lands at 949, one point past the cliff. A defect visible at
-arm's length does not keep a 10.
+| Severity | Corner back | Corner front | Edge back | Edge front |
+| --- | ---: | ---: | ---: | ---: |
+| de_minimis | 15 | 20 | 14 | 18 |
+| minor | 55 | 72 | 51 | 66 |
+| moderate | 175 | 228 | 150 | 195 |
+| severe | 325 | 423 | 305 | 397 |
 
-Each distinct physical flaw is **one defect object**, and multiple defect
-objects MAY target the same corner or edge — a corner with both whitening and
-a nick is two defects. All corner penalties on a face **sum into that face's
-single `corners` region sub-score** (and likewise all edge penalties into
-`edges`): the bottleneck is per-REGION, not per-corner. The corner/edge label
-is locational metadata and never changes the score. Pooling per region is
-deliberate — a region is scored collectively; true per-corner sub-scores are a
-future rubric refinement.
+Back values are the basis; front is `floor(basis * 1.3 + 0.5)`. Corner defects pool into `corners`, edge defects into `edges`, per face, not separately per corner or edge. Only de-minimis corner/edge defects can retain grade 10, and sufficient accumulated de-minimis defects can still lose that grade. This is not a rule for every defect type.
 
-Reference penalties (back-face values; front is ×1.3), deducted from that
-region:
-
-| Severity | Corner | Edge |
-|---|---|---|
-| de minimis | 15 | 14 |
-| minor | 55 | 51 |
-| moderate | 175 | 150 |
-| heavy | 325 | 305 |
-
-**Front multiplier: ×1.3.** Every defect penalty on the front face — corner,
-edge, or surface — is multiplied by 1.3 and **rounded half-up** after
-multiplication (centering is exempt; it already has its own front/back slope).
-Applied to the tables above: front corner penalties are 20 / 72 / 228 / 423;
-front edge penalties are 18 / 66 / 195 / 397.
+Local wear/whitening, a nick, a ding or fraying can inform these channels when classification and locator are established. A product alias does not change arithmetic; subtype spelling alone does not select severity. A scratch near a corner is not automatically corner wear.
 
 ## Surface defects
 
-Surface defects require a **depth**, a **size**, and normalized `x,y`
-coordinates (0–1 from the top-left of the face) — location is required here
-because, unlike a corner or edge, "surface" alone doesn't say where on the card.
+`region=surface` requires `severity`, `depth`, `size`, `x` and `y`.
 
-- **Depth** — `surface`: does not break the gloss (a scuff, a print line).
-  `scratch`: a visible line you can catch a fingernail on.
-  `deep`: surface-layer penetration (a gouge), without a stock fold or break.
-  A stock crease, including a light crease with an intact surface, is excluded
-  from `deep`; use the separate crease vocabulary when a crease is established.
-- **Size** — `dot`: about 2mm or less. `lt_1cm`: under 1cm. `lt_5cm`: under
-  5cm. `full_card`: spans most of the card.
+- `depth=surface`: surface mark without a gloss break, such as a scuff.
+- `depth=scratch`: an established scratch, described in the earlier standard as a visible line catchable by a fingernail. This is a classification description, not an instruction to perform a potentially damaging inspection.
+- `depth=deep`: surface-layer penetration, such as a gouge, without a stock fold or break. A stock crease is excluded even when its surface remains intact.
 
-Reference penalty matrix (back-face values; front is ×1.3):
+Size retains the approximate descriptions: `dot` is about 2 mm or less; `lt_1cm` is under 1 cm; `lt_5cm` is under 5 cm; `full_card` spans most of the card. Exact equality boundaries, precise extent measurand and conversion from a point annotation remain unresolved. A coordinate point alone does not establish the physical dot class. Preserve the supplied class and separately version any producer's measurement-to-class policy.
 
-| Depth \ Size | dot | lt_1cm | lt_5cm | full_card |
-|---|---|---|---|---|
+| Depth / size basis | dot | lt_1cm | lt_5cm | full_card |
+| --- | ---: | ---: | ---: | ---: |
 | surface | 5 | 25 | 80 | 180 |
 | scratch | 15 | 55 | 160 | 330 |
 | deep | 35 | 110 | 280 | 510 |
 
-The same ×1.3 front multiplier (rounded half-up) applies on the front face.
+| Severity | de_minimis | minor | moderate | severe |
+| --- | ---: | ---: | ---: | ---: |
+| Surface factor | 0.25 | 0.5 | 1 | 2 |
 
-## Line endpoints
+`deduction = floor(basis[depth][size] * face_multiplier * severity_factor + 0.5)`.
 
-Surface, crease, and edge defects — the three linear regions — MAY carry an
-optional second point, `x2`,`y2`, normalized 0–1 exactly like `x`,`y`, turning
-the placed point into a line segment (e.g. a UI line-drag that measures a
-scratch and derives its size class from the physical length). Line endpoints
-are a **presentational/derivation aid only and are never scored**: the
-reference scorer validates them when present (each finite and 0–1, and only
-ever as a pair — a lone `x2` is rejected with `"x2 and y2 must be provided
-together"`) and the arithmetic then ignores them entirely, so a defect with
-endpoints scores identically to the same defect without them
-(`test/vectors.json` pins this). Point-only regions (corner, stain,
-print_defect) don't declare them — an `x2` there is ignored as an unknown
-annotation field, like any other. Endpoints are a purely additive input-schema
-affordance: they change no penalty, and the severity/size **classes remain the
-scored input**.
+The face multiplier is 1.3 on front and 1 on back. Round once after the complete product. Do not round after each multiplier. The deduction pools into `surface`.
 
-## Print quality
+For `scratch/lt_1cm`, deductions are 14/28/55/110 on back and 18/36/72/143 on front. A front minor `surface/lt_1cm` deducts 16: rounding intermediate 12.5 to 13 would incorrectly give 17. Severe back `deep/full_card` deducts 1020; the line item retains 1020 while its region floors at zero. The moderate factor preserves the earlier basis numerically; this does not mean old observations were moderate, and they must not be backfilled.
 
-Print quality — the criteria that decide vintage 10s and 9s (focus/registration,
-gloss, print imperfections, border whiteness, creases, staining) — takes two shapes,
-both **mid-band fit**:
+## Crease, stain and placed print defect
 
-1. **Attribute ladders** — `focus`, `gloss`, `border` are face-global judgments (not
-   located anywhere in particular), assessed **independently per face** as an optional
-   `print: { focus?, gloss?, border? }` object on that face. Config-gated: a rubric
-   without `print_attributes` rejects any `print` block outright
-   (`"print requires a rubric with print_attributes"`); an absent object, or an absent
-   attribute within it, means **perfect** — no penalty. Ladders are short.
-2. **Placeable defect types** — `crease`, `stain`, and `print_defect` sit alongside
-   `corner`/`edge`/`surface` as `region` values on a defect. Unlike corner/edge
-   (where `x`,`y` are optional annotation), all three **require** `x`,`y` — like
-   `surface`, location matters for a placed flaw. Each carries a **severity** drawn
-   from *that region's own* vocabulary; crease, stain, and print_defect each have a
-   **disjoint** severity vocabulary from one another and from the shared corner/edge
-   vocabulary — a `crease` defect never accepts a `stain` or `print_defect` severity
-   word (or vice versa), even where a word is spelled the same (`heavy` is a valid
-   word in all four vocabularies — shared corner/edge, crease, stain, print_defect —
-   independently defined at a different penalty in each).
+These channels require severity and normalized `x,y`. Crease means an established stock fold or deformation along a fold. A subtle stock fold may have an intact surface. A surface-layer gouge is not a crease. A dent or isolated tear without an established fold has no general mapping supplied here.
 
-### Mid-band fitting
+| Channel | de_minimis | minor | moderate | severe | Scored region |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Crease, either face | 575 | 675 | 775 | 875 | surface |
+| Stain, front | 675 | 725 | 775 | 875 | surface |
+| Stain, back | 75 | 275 | 475 | 775 | surface |
+| Print defect, either face | 25 | 75 | 275 | 675 | print |
 
-Every print-quality number below is fit by choosing the penalty that lands the card
-at the **middle** of the target grade's 50-point band, not its edge —
-`penalty = 1000 − (100g + 25)` for target grade `g`. A card whose only flaw is that
-one attribute or defect lands exactly grade `g`, with margin against the band edge
-on both sides.
+These are absolute deductions. The generic front multiplier MUST NOT be applied again. Extent observations may be retained but there is no additional extent multiplier for these channels. Legacy crease `full_card` mixed extent into severity. A long crease is not automatically moderate or severe in 0.3; independently judged intensity selects the row.
 
-### Attribute ladders (per face, region `print`)
+**Deductions are not independent hard grade-ceiling rules.** The scorer has no separate `maximum_grade` operation. Under the default table, a de-minimis crease alone leaves 425 / grade 4; a de-minimis front stain alone leaves 325 / grade 3. These follow from deductions and the ladder. Further flaws in the same region add and may lower the grade further. Values are policy choices, not equivalence to another company's grading practice.
 
-| Attribute | Options → grade cap | Penalty |
-|---|---|---|
-| `focus` | sharp→10 · slightly_out→7 · noticeably_out→5 · severely_out→2 | 0 / 275 / 475 / 775 |
-| `gloss` | full→10 · most_retained→7 · some_loss→6 · much_lost→3 · absent→2 | 0 / 275 / 375 / 675 / 775 |
-| `border` | clean→10 · slightly_off_white→9 · yellowed→3 · browned→1.5 | 0 / 75 / 675 / 825 |
+Severity changes each individual default-table deduction with other inputs fixed. Card points or grade may stay unchanged because another region binds, a region reaches zero, or two point totals occupy the same grade band. Even a severe dot-sized scuff can retain grade 10; a universal severity grade cap is not part of this version.
 
-`slightly_off_white` caps at **9**, not 10: a touch of off-whiteness is a real flaw but
-not a disqualifying one, so `border` is the only ladder whose first non-baseline rung
-doesn't already cost a full grade band. Attribute penalties are **multiplier-exempt**:
-`front_defect_multiplier` (×1.3 on corner/edge/surface) does **not** apply here — each
-rung is already an absolute grade cap, not a generic front/back ratio.
+## Print attributes
 
-### Placeable types
+Per-face global attributes in the optional `print` object are distinct from located `print_defect` objects. Missing attributes mean no mathematical deduction.
 
-**Crease** (pools into the `surface` region bucket; `binding_region: "surface"` no
-longer implies scuff/scratch/deep-type wear specifically — it may be a crease):
+| Attribute | Value | Deduction |
+| --- | --- | ---: |
+| focus | sharp / slightly_out / noticeably_out / severely_out | 0 / 275 / 475 / 775 |
+| gloss | full / most_retained / some_loss / much_lost / absent | 0 / 275 / 375 / 675 / 775 |
+| border | clean / slightly_off_white / yellowed / browned | 0 / 75 / 675 / 825 |
 
-A crease is a stock fold or deformation along a fold, not a surface-layer
-gouge. `light` is a single light stock fold whose surface remains intact;
-`full_card` runs the full length of the card; `heavy` means multiple or more
-pronounced creases; `through_layers` is a crease that breaks through the card's
-layers (a paper split). A dent or an isolated tear is not automatically a crease.
+Attribute penalties are identical on either face; no generic multiplier applies. All nonzero attribute and print-defect deductions **add** in that face's `print` region; they do not compete as individual caps. `gloss=most_retained` and a separate moderate print defect produce `1000 - 275 - 275 = 450`, grade 4.5. Assessment guidance must avoid inventing duplicate findings from one observation.
 
-| Severity | light | full_card | heavy | through_layers |
-|---|---|---|---|---|
-| Penalty | 575 | 675 | 825 | 875 |
-| Grade cap | 4 | 3 | 1.5 | 1 |
+## Line endpoints and annotations
 
-**Stain** (pools into `surface`; penalty is **per-face** — a back stain is forgiven far
-more than a front one, an asymmetry the generic ×1.3 front multiplier cannot express, so
-`stain_penalties` carries explicit `{front, back}` columns per severity instead):
+Surface, crease and edge defects may carry paired `x2,y2`, finite and between 0 and 1. One without the other is invalid. The scorer validates the pair and ignores it for arithmetic. A producer may derive a size class using endpoints under its own versioned measurement policy; the scored input is the class. Changing endpoints alone MUST NOT change the score. Corner, stain and print-defect endpoints are undeclared annotations and are ignored, not a second scored extent field.
 
-| Severity | very_slight | slight | obvious | heavy |
-|---|---|---|---|---|
-| Back penalty (cap) | 75 (9) | 275 (7) | 475 (5) | 775 (2) |
-| Front penalty (cap) | 675 (3) | 675 (3) | 775 (2) | 875 (1) |
+Unknown defect annotations do not change arithmetic. The strict outer schema and permissive defect-annotation level are intentional. Non-finite coordinates and unsupported scored values are errors. Exact error wording and which invalid field is reported first are non-normative.
 
-**Print defect** (a placed line/dot/snow-type printing flaw; pools into the `print`
-region — the same bucket the attribute ladders bottom, so a placed print defect and,
-say, a `gloss` rung compete for which one caps the face):
+## Configuration support
 
-| Severity | slight | minor | blemish | heavy |
-|---|---|---|---|---|
-| Penalty | 25 | 75 | 275 | 675 |
-| Grade cap | 10 | 9 | 7 | 3 |
+The default rubric enables all five scored regions. A custom rubric may omit `print_attributes`, producing four regions; a present `print` block then fails. Crease and stain require their own tables but not print attributes. A print defect requires **both** `print_defect_penalties` and `print_attributes`; otherwise scoring must fail rather than subtract from a nonexistent region. Surface severity factors are required by the 0.3 configuration schema. Custom numeric choices are not the default rubric.
 
-`slight`'s penalty (25 → 975 points → raw 9.5 → **promoted to 10**) is deliberately
-**GEM-compatible**: one slight printing imperfection does not, on its own, cost a card
-its top grade.
+Centering may use scalar slopes or curves per face. A curve takes precedence when supplied; breakpoints must increase and the last segment must be open-ended (`up_to=null`). Accumulate and round once. A scalar slope is the one-segment curve. Hosts must validate configurations and these semantic constraints; the reference scorer is not a configuration linter.
 
-### Gating
+## Reproducibility, compatibility and known limitations
 
-- `print` (the attribute-ladder input) requires a rubric with `print_attributes`;
-  absent, `score()` fails loudly.
-- `crease` requires `crease_penalties`; `stain` requires `stain_penalties` — **neither
-  requires `print_attributes`** — a rubric can support creases and stains without
-  shipping the attribute ladders at all.
-- `print_defect` is **double-gated**: it requires both `print_defect_penalties` (to
-  look up the penalty) and `print_attributes` (because it pools into the `print`
-  region, which only exists on a rubric that defines that table — without the second
-  gate, a custom rubric with `print_defect_penalties` but no `print_attributes` would
-  silently produce a broken region score).
-- A rubric with none of these tables stays **strictly four-region**: the `print` region
-  appears in `faces.<face>.regions` only when `print_attributes` is present.
+Frozen vectors and semantic examples in `test/` specify this version's expected behavior. Conformance to a published version is governed by [CONTRIBUTING](CONTRIBUTING.md); passing tests does not establish physical inspection accuracy.
 
-### Notes
+Existing 0.1/0.2 artifacts and stored assessments retain their original version and interpretation. New 0.3 judgments may move scores either way. There is no automatic ordinal translation of old words. Reassessment requires a separately identified judgment/result; preserve historical inputs, hashes and accepted grades. Retain the actual scorer/rubric used, not only a display pin.
 
-- **`line_items` order is presentation order, not normative** — only each line item's
-  `region` and `penalty` are meaningful for scoring; the order items are pushed in (and
-  therefore the order a UI would render them) is an implementation artifact of
-  iteration order, not part of the spec.
-- A placed print defect's `line_items` detail reads `"print {severity}"` (e.g.
-  `"print slight"`), matching the `"{depth} {size}"` / `"{corner} {severity}"` pattern
-  used by the other defect types.
-- **Validation-order asymmetry (observable, non-normative):** a `surface` defect checks
-  `depth`/`size` before `x`/`y`, so a defect missing both size and coordinates reports
-  the size error first; the three placeable types check `x`/`y` **before**
-  `severity`, so a `crease` defect missing both coordinates and a valid severity
-  reports the coordinate error first instead. Which error surfaces first when multiple
-  fields are invalid at once is not part of the spec — only that the input is rejected,
-  and the accepted score is unaffected either way.
-
-## Worked example
-
-A **moderate corner defect on the back**: penalty 175 (from the corner table
-above). `1000 − 175 = 825`. That region is now the side's minimum, so
-`side_points = 825`. With nothing else on the card, `points = 825`, which
-falls in the 800–849 step: `grade = 8`, `band = LP`.
-
-The **same defect on the front** instead: the penalty is multiplied by 1.3
-first — `round(175 × 1.3) = round(227.5) = 228` — then subtracted:
-`1000 − 228 = 772`. That falls in the 750–799 step: `grade = 7.5`, still
-`band = LP`. Same physical defect, worse grade, purely because it's on the
-face judged more harshly.
-
-## Grade ladder
-
-`points` maps to `grade` in 50-point steps (`raw = floor(points/50) × 0.5`,
-with the 9.5 slot promoted to 10), and `grade` maps to a condition band by
-taking the highest `min_grade` the grade still reaches:
-
-| Points | Grade | Condition band |
-|---|---|---|
-| 950–1000 | 10 | NM |
-| 900–949 | 9 | NM |
-| 850–899 | 8.5 | LP |
-| 800–849 | 8 | LP |
-| 750–799 | 7.5 | LP |
-| 700–749 | 7 | LP |
-| 650–699 | 6.5 | MP |
-| 600–649 | 6 | MP |
-| 550–599 | 5.5 | MP |
-| 500–549 | 5 | MP |
-| 450–499 | 4.5 | HP |
-| 400–449 | 4 | HP |
-| 350–399 | 3.5 | HP |
-| 300–349 | 3 | HP |
-| 250–299 | 2.5 | DMG |
-| 200–249 | 2 | DMG |
-| 150–199 | 1.5 | DMG |
-| 0–149 | 1 | DMG |
-
-Bands, by minimum grade: **NM** ≥9 · **LP** ≥7 · **MP** ≥5 · **HP** ≥3 ·
-**DMG** ≥1. Band selection is order-insensitive in the rubric data — the
-scorer picks whichever band has the highest `min_grade` the grade still
-clears.
-
-## Versioning
-
-This standard is **Touchstone 0.2**. Versions are two-part, `major.minor`;
-there is no patch digit. One number everywhere — this prose, the rubric data's
-`rubric_version`, and the `$id` path the schemas are served from all carry it.
-That is the version to cite when you claim conformance.
-
-Every change to any number in this document or in `rubric.json` — a
-curve segment, a penalty, a band boundary — is **a new version**, never a
-silent edit in place. This prose is normative, so a number cannot move in the
-data without moving here too. Every score result names the `rubric_id` and
-`rubric_version` that produced it, so a grade is always reproducible against
-the exact rules in force when it was computed. Per-set rubrics (e.g. a
-vintage-basketball override) are not special-cased code — they are new
-instances of `rubric-config.schema.json`, resolved by the framework's
-inheritance (`default → game → era/class → set`).
-Conformance with Touchstone 0.2 means passing `test/vectors.json`, as provided
-by CONTRIBUTING's versioned conformance commitment. Those arithmetic vectors
-are unchanged from 0.1. This claim attests to an implementation's arithmetic
-behavior; it does not attest to the physical truth of an assessment, observer
-or model accuracy, or complete inspection of a card. The semantic examples below
-explain the meanings of inputs; they add no physical-classification test to that
-conformance claim. The existing licensing and trademark commitments are unchanged.
-**This prose is normative.** The reference implementation and the golden vectors are
-*conformance evidence* — the executable demonstration that an implementation
-agrees with this document. Where they and this prose disagree, one of them
-contains a bug: file it, decide which is wrong, and fix that one. Neither the
-implementation's internal ordering, its floating-point accumulation, nor the
-English text of its error messages is part of the standard.
-
-## Stated-condition contract examples
-
-These synthetic cases prescribe encodings given the stated facts. They are not
-real-card observations, training labels, or evidence of classification accuracy.
-All cases concern one back-face flaw with all other inputs ideal. The gouge's
-existing `dot` extent class is assumed; placing a point does not establish size.
-
-| Case | Stated condition | Permitted encoding | Excluded encodings | Points / grade |
-| --- | --- | --- | --- | --- |
-| surface-gouge | Surface-layer gouge; no stock fold or break; dot extent established | surface/deep/dot | crease/light | 965 / 10 |
-| intact-light-crease | Single light stock fold; surface intact, layers not split | crease/light | surface/deep/dot | 425 / 4 |
-| through-layer-crease | Crease with paper split through layers along the fold | crease/through_layers | surface/deep/dot | 125 / 1 |
-| unsupported-dent | Local indentation; no fold or surface-layer gouge | unsupported | crease/light, surface/deep/dot | No supported score |
-
-Executable counterparts are in `test/input-semantics.json`. Excluded encodings
-are wrong for those stated conditions but remain structurally valid inputs:
-`score()` cannot detect that a person or model supplied the wrong label. The
-tests check these examples, their correspondence to this table, and the removal
-of the old crease/paper-break meaning in both schema and prose. They supplement
-the arithmetic vectors; they do not make the scorer a physical classifier.
-
-## Implementation guidance (non-normative)
-
-Products may lead standard development by testing new workflows and versioned
-schemas on real cards. Their schemas need not match this assessment schema.
-Keep faithful mappings into a named published Touchstone version distinct from
-product-only evidence and experiments that change scoring meaning or arithmetic.
-Experiments can proceed before standard adoption. Identify arithmetic that diverges
-from a published version and test any versioned conformance claim against its vectors.
-An arithmetic conformance claim does not establish that an experimental physical
-mapping follows the published definitions; describe that distinction explicitly.
-Propose standard adoption with evidence when the interpretation is ready.
-
-Translate aliases into the existing region-specific vocabulary only when meaning
-is preserved. For example, an edge-wear label still needs a corner or edge and
-that region's severity; its name alone supplies neither. Preserve useful source
-subtypes. Emit one object per distinct flaw, not one per overlapping view of it.
-Shared coordinates do not prove two observations are the same flaw; the scorer
-sums supplied objects and performs no identity or geometric deduplication.
-
-Keep unresolved observations and confirmed foreign material separate from damage
-inputs. Excluding foreign material does not establish that the underlying surface
-is undamaged. Do not turn an unresolved observation or unsupported dent into a
-clean result by silently omitting it. A partial assessment is not a complete card inspection;
-omitted centering/print inputs and absent defects still receive ideal arithmetic
-defaults. No particular confirmation UI, capture method, or new input field is
-required by this guidance.
-
-Retain the source assessment and its product-schema version, the mapping version,
-the mapped assessment, and the exact rubric artifact/result version in the host's
-record. `score(input, rubric)` uses the passed rubric; it does not resolve or
-enforce the optional input `rubric` pin. Historical 0.1 inputs stay reproducible
-under their original artifacts and interpretation. Reinterpreting a physical
-finding creates a new assessment linked to the earlier one; never overwrite or
-relabel the old score. A standard release does not automatically migrate a
-consumer's existing 0.1 pin; each consumer adopts it explicitly. This guidance
-adds no required schema fields.
-
-## Known limitations and evidence still needed
-
-- Dents have no supported encoding or penalty. A tear without an established
-  crease also has no general mapping supplied by this correction. Preserve
-  unsupported observations rather than inventing a crease or edge-wear score.
-- The surface extent wording remains approximate: equality at boundaries, the
-  precise extent measure and the meaning of "most" are unresolved. No exact
-  2/10/50 mm partition or conversion from a point annotation is adopted here.
-- The centering ratios' measurement position/window remains unspecified. Curves
-  and quantization are unchanged; arithmetic agreement does not establish
-  equivalence between instruments or methods.
-- Physical anchor evidence, including borderline scratch versus gouge cases and
-  the reliable recognition of a light crease, remains necessary. Synthetic
-  fixtures establish logical consistency, not real-card validity or coverage.
-- Aggregation remains a first-order pure minimum, with no gap-credit or
-  count-rule term. Any change requires data and a future version.
-
-Version 0.2 adopts a bounded correction to the stated-input contract. It does not
-establish empirical grading validity or broader physical coverage. Representative
-real-card evidence remains necessary to evaluate the unresolved distinctions
-above. This release neither resolves all taxonomy questions nor waives any
-adopter's existing corpus or release gate.
+Unresolved limitations include physical anchor calibration and observer agreement; borderline gouge/crease distinctions; unsupported dents/isolated tears; exact surface extent and centering measurands; defect segmentation/counting; local/global overlap; and pure worst-region aggregation. This standard supplies no classifier, capture method, completeness proof, empirical grade-equivalence claim, or automatic migration of old evidence.

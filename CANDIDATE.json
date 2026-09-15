@@ -1,0 +1,24 @@
+{
+  "status": "accepted",
+  "rubric_version": "0.3",
+  "package_version": "0.3.0",
+  "prepared": "2026-09-14",
+  "upstream_release": null,
+  "local_basis": {
+    "repository": "Grailology",
+    "commit": "5b4f704c46f636071c8bca853d8d943f0c0471d8",
+    "path": "infra/touchstone-standard/standard/0.3",
+    "description": "Existing implemented 0.3 scorer/rubric retained. Documentation, schema description corrections and test package prepared as uncommitted candidate additions after this base; this commit is not an upstream Touchstone release."
+  },
+  "hash_convention": "SHA-256 of UTF-8 text with CRLF normalized to LF; source identity, not actual served/runtime byte receipts.",
+  "sha256_lf": {
+    "scoring.mjs": "1c50ec52a95252de01c1c73d0f43a02206b86036d2ef56b1ef944647a09f7690",
+    "rubric.json": "d856f09cef70c950670c4ec0b81b89188661dd6ea7fb555c536896759b457af4",
+    "schemas/assessment-input.schema.json": "f053adf9f593dcfc96a4e073369e9b3dba16b974bfe40067ff57fe2a059bbe41",
+    "schemas/rubric-config.schema.json": "1076c4dc001c29051f9d0828986749ab4409edd7745f0baa99238417f6c2d654",
+    "schemas/score-result.schema.json": "e15c4293d435d4d0cacb045294ae1688d1dcb33c9de5b691a526433a80b424dd",
+    "test/vectors.json": "c2c16b59045571ac20b72e7a73cd2d706d55d779402dce899974d9ff4c84b1f9",
+    "test/input-semantics.json": "c76d42d648b527e11ca3b99f69c83a173fd1d4662b3340b851891b19422682e2"
+  },
+  "decision": "https://github.com/touchstone-standard/touchstone/pull/3#issuecomment-5673524522"
+}

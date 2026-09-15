@@ -1,66 +1,51 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { readFile, readdir } from "node:fs/promises";
-import { score, ScoreError } from "../scoring.mjs";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { score, ScoreError } from '../scoring.mjs';
 
-// The standard's own vectors, plus every alternate config that happens to be
-// present. Alternates are DISCOVERED, never listed by hand: this file also
-// ships in the public bundle, where `test/fixtures/` deliberately does not
-// exist. A hardcoded list would mean two copies of this harness, and two
-// copies drift. A missing directory simply yields no alternates — the
-// standard's suite alone, which is the correct published behaviour and needs
-// no second file to express it.
-//
-// What the alternates buy, and why they are NOT old versions: they are the
-// only coverage of rubric shapes the standard's own rubric never takes — the
-// scalar centering branch, and the four-region no-print result (`regionsFor`,
-// plus the print double-gate whose own comment says not to drop it). Per-set
-// rubrics are new instances of the same schema, so that is the property they
-// rest on. A fixture whose paired `.vectors.json` is missing throws here, at
-// load, on purpose.
-const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
-const shape = (r) =>
-  `${r.centering.front_curve ? "curve" : "scalar"} centering, ${r.print_attributes ? "print" : "no print"}`;
+const read = p => JSON.parse(readFileSync(new URL(p, import.meta.url), 'utf8'));
+const rubric = read('../rubric.json');
+const vectors = read('./vectors.json');
+const order = xs => xs.map(x => JSON.stringify({ face:x.face, region:x.region,
+  ...(x.attribute ? { attribute:x.attribute } : {}), penalty:x.penalty })).sort();
 
-const suites = [{
-  label: "Touchstone 0.2 (frozen 0.1 arithmetic vectors)",
-  rubric: await load("../rubric.json"),
-  vectors: await load("./vectors.json"),
-}];
+for (const v of vectors.valid) test(`0.3 vector: ${v.name}`, () => {
+  const result = score(v.input, rubric);
+  for (const [key, expected] of Object.entries(v.expect)) assert.deepEqual(result[key], expected, key);
+  assert.deepEqual(result.faces, v.expected_output.faces);
+  assert.deepEqual(order(result.line_items), order(v.expected_output.line_items));
+});
 
-let entries = [];
-try {
-  entries = await readdir(new URL("./fixtures/", import.meta.url));
-} catch {
-  /* no fixtures/ — the published bundle. Not an error. */
-}
-for (const name of entries.filter((n) => n.endsWith(".json") && !n.endsWith(".vectors.json")).sort()) {
-  const rubric = await load(`./fixtures/${name}`);
-  const vectors = await load(`./fixtures/${name.replace(/\.json$/, ".vectors.json")}`);
-  suites.push({ label: `${rubric.rubric_id} (${shape(rubric)})`, rubric, vectors });
-}
+for (const v of vectors.invalid) test(`0.3 refusal: ${v.name}`, () => {
+  assert.throws(() => score(v.input, rubric), e => e instanceof ScoreError && e.message.includes(v.error_includes));
+});
 
-for (const { label, rubric, vectors } of suites) {
-  for (const v of vectors.valid) {
-    test(`${label} vector: ${v.name}`, () => {
-      const r = score(v.input, rubric);
-      for (const [k, want] of Object.entries(v.expect)) {
-        // grade_label is NON-NORMATIVE presentation, so conformance must not turn on
-        // it — in ANY suite. What the frozen alternate sets prove is that a different
-        // rubric config still SCORES correctly under the current engine; that is a
-        // claim about the arithmetic, not about a display string. Skipping the
-        // comparison here (rather than editing the frozen expects) is what lets those
-        // files stay byte-identical. The label's own shape is unit-tested in
-        // rubric.test.mjs, where it belongs — our implementation, not the standard.
-        if (k === "grade_label") continue;
-        assert.equal(r[k], want, k);
-      }
-    });
+test('all 96 surface combinations strictly increase deduction at fixed basis', () => {
+  for (const face of ['front','back']) for (const depth of ['surface','scratch','deep']) {
+    for (const size of ['dot','lt_1cm','lt_5cm','full_card']) {
+      const deductions = ['de_minimis','minor','moderate','severe'].map(severity =>
+        score({[face]:{defects:[{region:'surface',depth,size,severity,x:.5,y:.5}]}},rubric).line_items[0].penalty);
+      assert.ok(deductions.every((p,i) => p > 0 && (!i || p > deductions[i-1])));
+    }
   }
-  for (const v of vectors.invalid) {
-    test(`${label} invalid: ${v.name}`, () => {
-      assert.equal(typeof v.error_includes, "string");
-      assert.throws(() => score(v.input, rubric), (e) => e instanceof ScoreError && e.message.includes(v.error_includes));
-    });
-  }
-}
+});
+
+test('custom print configuration preserves double gate and four-region support', () => {
+  const custom = structuredClone(rubric);
+  delete custom.print_attributes;
+  assert.throws(() => score({back:{defects:[{region:'print_defect',severity:'minor',x:.5,y:.5}]}},custom), /print requires|print_defect requires/);
+  assert.throws(() => score({back:{print:{}}},custom), /print requires/);
+  delete custom.print_defect_penalties;
+  assert.deepEqual(Object.keys(score({},custom).faces.front.regions), ['centering','corners','edges','surface']);
+  assert.equal(score({back:{defects:[{region:'crease',severity:'minor',x:.5,y:.5}]}},custom).points,325);
+});
+
+test('scalar centering branch remains available with one final rounding', () => {
+  const custom = structuredClone(rubric);
+  delete custom.centering.front_curve;
+  delete custom.centering.back_curve;
+  custom.centering.front_slope = 10;
+  custom.centering.back_slope = 2;
+  assert.equal(score({front:{centering:{lr_pct:55}}},custom).points,950);
+  assert.equal(score({back:{centering:{lr_pct:90}}},custom).points,920);
+});
