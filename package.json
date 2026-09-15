@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "license": "Apache-2.0",
   "type": "module",
-  "description": "Touchstone 0.3 candidate: card-condition rubric, schemas and dependency-free reference scorer.",
+  "description": "Touchstone 0.3: card-condition rubric, schemas and dependency-free reference scorer.",
   "main": "./scoring.mjs",
   "exports": {
     ".": "./scoring.mjs",
@@ -20,7 +20,7 @@
     "schemas/rubric-config.schema.json",
     "schemas/score-result.schema.json",
     "proposals/README.md",
-    "proposals/common-severity.md",
+    "proposals/0003.md",
     "test/vectors.json",
     "test/input-semantics.json",
     "test/scoring.test.mjs",

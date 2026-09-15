@@ -1,6 +1,5 @@
 # Proposals
 
-[Common damage severity](common-severity.md) is the draft TIP for 0.3. It has no
-upstream PR number. Rename it to the assigned number when the public proposal
-is authorized. [CONTRIBUTING](../CONTRIBUTING.md) requires five sections and the
-Chair's written decision. Included code and vectors do not imply acceptance.
+[TIP 0003: common damage severity](0003.md) is accepted for 0.3.
+The proposal links to the written Chair decision. [CONTRIBUTING](../CONTRIBUTING.md)
+defines the proposal and governance process.

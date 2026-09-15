@@ -1,5 +1,5 @@
 {
-  "status": "unpublished-candidate",
+  "status": "accepted",
   "rubric_version": "0.3",
   "package_version": "0.3.0",
   "prepared": "2026-09-14",
@@ -19,5 +19,6 @@
     "schemas/score-result.schema.json": "e15c4293d435d4d0cacb045294ae1688d1dcb33c9de5b691a526433a80b424dd",
     "test/vectors.json": "c2c16b59045571ac20b72e7a73cd2d706d55d779402dce899974d9ff4c84b1f9",
     "test/input-semantics.json": "c76d42d648b527e11ca3b99f69c83a173fd1d4662b3340b851891b19422682e2"
-  }
+  },
+  "decision": "https://github.com/touchstone-standard/touchstone/pull/3#issuecomment-5673524522"
 }

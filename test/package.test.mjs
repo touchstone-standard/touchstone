@@ -7,12 +7,13 @@ const root = new URL('../',import.meta.url);
 const text = p => readFileSync(new URL(p,root),'utf8').replaceAll('\r\n','\n');
 const json = p => JSON.parse(text(p));
 
-test('package identity and candidate provenance do not claim an upstream release', () => {
+test('package identity preserves preparation hashes and the adoption decision', () => {
   assert.equal(json('package.json').version,'0.3.0');
   assert.equal(json('rubric.json').rubric_version,'0.3');
   const candidate=json('CANDIDATE.json');
-  assert.equal(candidate.status,'unpublished-candidate');
+  assert.equal(candidate.status,'accepted');
   assert.equal(candidate.upstream_release,null);
+  assert.equal(candidate.decision,'https://github.com/touchstone-standard/touchstone/pull/3#issuecomment-5673524522');
   for(const [file,want]of Object.entries(candidate.sha256_lf))
     assert.equal(createHash('sha256').update(text(file)).digest('hex'),want,file);
 });
@@ -25,12 +26,12 @@ test('published file allowlist excludes repository-only test directories', () =>
     'test/schema-contract.test.mjs','test/scoring.test.mjs','test/vectors.json']);
 });
 
-test('TIP has the five required sections in order and does not claim acceptance', () => {
-  const tip=text('proposals/common-severity.md');
+test('accepted TIP has five required sections and links its written decision', () => {
+  const tip=text('proposals/0003.md');
   assert.deepEqual([...tip.matchAll(/^## (.+)$/gm)].map(m=>m[1]),[
     'Motivation','Specification','Rationale and Alternatives','Backward Compatibility','Reference Implementation']);
-  assert.match(tip,/Status: draft/);
-  assert.match(tip,/remaining Chair action/);
+  assert.match(tip,/Status: accepted/);
+  assert.match(tip,/Written Chair decision/);
 });
 
 test('all relative Markdown links resolve inside the standalone package', () => {

@@ -1,6 +1,6 @@
 # Touchstone 0.3
 
-September 14, 2026 candidate. **Not yet an upstream published release.** This is the complete proposed normative specification for the adjacent scorer and rubric. Package version `0.3.0` is candidate package metadata; the rubric version is `0.3`. See [the proposal](proposals/common-severity.md), [changelog](CHANGELOG.md) and [candidate provenance](CANDIDATE.json).
+September 14, 2026. Accepted normative specification for Touchstone `0.3`, package `0.3.0`. See [TIP 0003](proposals/0003.md), [changelog](CHANGELOG.md) and [preparation provenance](CANDIDATE.json).
 
 Touchstone turns an encoded card-condition assessment into points and a grade. Its open arithmetic does not determine whether an assessment is physically true, complete, or obtained with an accurate instrument. MUST, MUST NOT and MAY identify requirements and permissions. The numeric rules below describe the supplied `default` rubric; custom configurations are addressed separately.
 
@@ -151,7 +151,7 @@ Centering may use scalar slopes or curves per face. A curve takes precedence whe
 
 ## Reproducibility, compatibility and known limitations
 
-Frozen vectors and semantic examples in `test/` specify this candidate's expected behavior. Conformance to a published version is governed by [CONTRIBUTING](CONTRIBUTING.md); passing unpublished candidate tests does not establish that a Chair decision or public release occurred.
+Frozen vectors and semantic examples in `test/` specify this version's expected behavior. Conformance to a published version is governed by [CONTRIBUTING](CONTRIBUTING.md); passing tests does not establish physical inspection accuracy.
 
 Existing 0.1/0.2 artifacts and stored assessments retain their original version and interpretation. New 0.3 judgments may move scores either way. There is no automatic ordinal translation of old words. Reassessment requires a separately identified judgment/result; preserve historical inputs, hashes and accepted grades. Retain the actual scorer/rubric used, not only a display pin.
 

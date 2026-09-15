@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.3 candidate — September 14, 2026
+## 0.3 — September 14, 2026
 
-Implemented candidate, pending upstream Chair decision and publication. Rubric
-`0.3`; package metadata `0.3.0`. See the [TIP draft](proposals/common-severity.md).
+Accepted by the Chair in TIP 0003. Rubric
+`0.3`; package metadata `0.3.0`. See the [TIP 0003](proposals/0003.md).
 
 ### Scoring and inputs
 

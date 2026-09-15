@@ -1,10 +1,9 @@
-# @touchstonestandard/rubric — 0.3 candidate
+# @touchstonestandard/rubric — 0.3
 
-This standalone package contains the candidate rubric, dependency-free ESM scorer,
-schemas, full specification and conformance fixtures. It is prepared for a Chair
-decision and publication; it is **not evidence that upstream 0.3 or npm 0.3.0 has
-been published**. [CANDIDATE.json](CANDIDATE.json) records local provenance without
-inventing a public source commit.
+This standalone package contains the Touchstone 0.3 rubric, dependency-free ESM scorer,
+schemas, full specification and conformance fixtures. [TIP 0003](proposals/0003.md)
+is accepted by the Chair. [CANDIDATE.json](CANDIDATE.json) retains preparation provenance
+and links to the written adoption decision. Registry availability is recorded separately.
 
 ## Run locally
 
@@ -17,7 +16,7 @@ npm pack
 
 No dependencies or account are needed for tests. Extract the tarball and run
 `npm test` inside `package/` to verify the standalone contents. Package version
-`0.3.0` is metadata for a future release, not a registry-availability claim.
+`0.3.0` identifies this package; check the registry for availability.
 
 ```js
 import { readFileSync } from 'node:fs';
@@ -46,8 +45,8 @@ Existing assessments must continue to use their original versioned runtime.
   Test runners require only files included in this package.
 - [test/input-semantics.json](test/input-semantics.json): synthetic stipulated
   conditions, not observed cards or a physical classifier.
-- [CHANGELOG.md](CHANGELOG.md) and [proposal](proposals/common-severity.md):
-  implementer impact, compatibility and the remaining Chair decision.
+- [CHANGELOG.md](CHANGELOG.md) and [proposal](proposals/0003.md):
+  implementer impact, compatibility and the Chair decision.
 - [CONTRIBUTING.md](CONTRIBUTING.md), [LICENSE](LICENSE), [NOTICE](NOTICE):
   governance, conformance claims, licensing and attribution.
 
