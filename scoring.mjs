@@ -145,7 +145,7 @@ function surfacePenalty(face, d, rubric, path, mult) {
   if (p == null) fail(path, `size must be one of ${Object.keys(row).join("/")}`);
   requireXY(d, path);
   validateOptionalLineEndpoints(d, path);
-  return { region: "surface", detail: humanize(`${d.depth} ${d.size}`), penalty: roundHalfUp(p * mult) };
+  return { region: "surface", detail: humanize(`${d.depth} ${d.size}`), penalty: roundHalfUp(p * mult * classPenalty(rubric.surface_severity_factors, d.severity, path)) };
 }
 
 const ALLOWED_TOP_LEVEL_KEYS = ["front", "back", "subject", "rubric"];

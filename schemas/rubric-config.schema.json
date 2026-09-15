@@ -1,14 +1,34 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://touchstonestandard.org/schemas/0.2/rubric-config.schema.json",
+  "$id": "https://touchstonestandard.org/schemas/0.3/rubric-config.schema.json",
   "title": "Touchstone rubric configuration",
   "description": "The complete Touchstone rubric as data: base points, centering slopes, the corner/edge/surface penalty tables, and (config-gated) the print-attribute ladders and crease/stain/print-defect penalty tables that the reference scorer (scoring.mjs) interprets. Publishing this file IS publishing the standard; a per-set rubric (default → game → era/class → set inheritance) is a new instance of this schema, not new code.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["rubric_id", "rubric_version", "base_points", "grade_band_points", "centering", "front_defect_multiplier", "corner_penalties", "edge_penalties", "surface_penalties", "condition_bands"],
-  "dependentRequired": { "print_defect_penalties": ["print_attributes"] },
+  "required": [
+    "rubric_id",
+    "rubric_version",
+    "base_points",
+    "grade_band_points",
+    "centering",
+    "front_defect_multiplier",
+    "corner_penalties",
+    "edge_penalties",
+    "surface_penalties",
+    "condition_bands",
+    "surface_severity_factors"
+  ],
+  "dependentRequired": {
+    "print_defect_penalties": [
+      "print_attributes"
+    ]
+  },
   "$defs": {
-    "quantize_pct": { "type": "number", "exclusiveMinimum": 0, "description": "Centering percentages are rounded to the nearest multiple of this before computing the penalty (determinism)." },
+    "quantize_pct": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Centering percentages are rounded to the nearest multiple of this before computing the penalty (determinism)."
+    },
     "centering_curve": {
       "type": "array",
       "minItems": 1,
@@ -16,109 +36,257 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["up_to", "slope"],
+        "required": [
+          "up_to",
+          "slope"
+        ],
         "properties": {
           "up_to": {
-            "type": ["number", "null"],
+            "type": [
+              "number",
+              "null"
+            ],
             "exclusiveMinimum": 0,
             "description": "Upper bound of this segment in deviation percentage points, or null for the open-ended final segment."
           },
-          "slope": { "type": "number", "exclusiveMinimum": 0, "description": "Points deducted per percentage point of deviation within this segment." }
+          "slope": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Points deducted per percentage point of deviation within this segment."
+          }
         }
       }
     }
   },
   "properties": {
-    "$schema": { "type": "string", "description": "Optional JSON Schema self-reference. Use the schema's absolute $id, not a relative path: a relative path resolves only where the server mirrors the repository layout." },
-    "rubric_id": { "type": "string", "description": "Identifies which rubric this is within the inheritance hierarchy, e.g. 'default' or 'vintage-basketball'." },
-    "rubric_version": { "type": "string", "pattern": "^\\d+\\.\\d+$", "description": "Two-part version, major.minor - there is no patch digit. Every change to any number below is a new version; scores name the rubric_id + rubric_version that produced them." },
-    "base_points": { "type": "integer", "minimum": 1, "description": "The flawless region sub-score every region (centering, corners, edges, surface) starts from before penalties are subtracted." },
-    "grade_band_points": { "type": "integer", "minimum": 1, "description": "Width of a grade-ladder band in points. raw = floor(points / grade_band_points) × 0.5." },
+    "$schema": {
+      "type": "string",
+      "description": "Optional JSON Schema self-reference. Use the schema's absolute $id, not a relative path: a relative path resolves only where the server mirrors the repository layout."
+    },
+    "rubric_id": {
+      "type": "string",
+      "description": "Identifies which rubric this is within the inheritance hierarchy, e.g. 'default' or 'vintage-basketball'."
+    },
+    "rubric_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Two-part version, major.minor - there is no patch digit. Every change to any number below is a new version; scores name the rubric_id + rubric_version that produced them."
+    },
+    "base_points": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The flawless region sub-score every region (centering, corners, edges, surface) starts from before penalties are subtracted."
+    },
+    "grade_band_points": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Width of a grade-ladder band in points. raw = floor(points / grade_band_points) × 0.5."
+    },
     "centering": {
       "type": "object",
-      "description": "Centering-penalty parameters. Deviation is the max-axis offset from 50/50, quantized before scoring. Two supported forms: scalar per-face slopes, or per-face piecewise-linear curves. The default rubrics in both 0.1 and 0.2 use curves. A scalar slope s is exactly the one-segment curve [{ up_to: null, slope: s }].",
+      "description": "Centering-penalty parameters. Deviation is the max-axis offset from 50/50, quantized before scoring. Two supported forms: scalar per-face slopes, or per-face piecewise-linear curves. The default rubrics in 0.1, 0.2 and 0.3 use curves. A scalar slope s is exactly the one-segment curve [{ up_to: null, slope: s }].",
       "oneOf": [
         {
           "additionalProperties": false,
-          "required": ["front_slope", "back_slope", "quantize_pct"],
+          "required": [
+            "front_slope",
+            "back_slope",
+            "quantize_pct"
+          ],
           "description": "Scalar form: penalty = deviation x slope, rounded half-up.",
           "properties": {
-            "front_slope": { "type": "number", "exclusiveMinimum": 0, "description": "Points deducted per percentage point of front-face centering deviation." },
-            "back_slope": { "type": "number", "exclusiveMinimum": 0, "description": "Points deducted per percentage point of back-face centering deviation. Normally smaller than front_slope — the back gets more tolerance." },
-            "quantize_pct": { "$ref": "#/$defs/quantize_pct" }
+            "front_slope": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Points deducted per percentage point of front-face centering deviation."
+            },
+            "back_slope": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Points deducted per percentage point of back-face centering deviation. Normally smaller than front_slope — the back gets more tolerance."
+            },
+            "quantize_pct": {
+              "$ref": "#/$defs/quantize_pct"
+            }
           }
         },
         {
           "additionalProperties": false,
-          "required": ["front_curve", "back_curve", "quantize_pct"],
+          "required": [
+            "front_curve",
+            "back_curve",
+            "quantize_pct"
+          ],
           "description": "Piecewise-linear form: penalty accumulates slope x span across the segments the deviation crosses, then rounds half-up ONCE at the end.",
           "properties": {
-            "front_curve": { "$ref": "#/$defs/centering_curve" },
-            "back_curve": { "$ref": "#/$defs/centering_curve" },
-            "quantize_pct": { "$ref": "#/$defs/quantize_pct" }
+            "front_curve": {
+              "$ref": "#/$defs/centering_curve"
+            },
+            "back_curve": {
+              "$ref": "#/$defs/centering_curve"
+            },
+            "quantize_pct": {
+              "$ref": "#/$defs/quantize_pct"
+            }
           }
         }
       ]
     },
-    "front_defect_multiplier": { "type": "number", "minimum": 1, "description": "Multiplier applied to all front-face DEFECT penalties (not centering, which has its own per-face slope) — the front of the card is judged more harshly." },
+    "front_defect_multiplier": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Multiplier applied to all front-face DEFECT penalties (not centering, which has its own per-face slope) — the front of the card is judged more harshly."
+    },
     "corner_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["de_minimis", "minor", "moderate", "heavy"],
-      "description": "Back-face-base point deduction for a corner defect, keyed by severity class.",
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "description": "Version 0.3 deductions by common severity.",
       "properties": {
-        "de_minimis": { "type": "integer", "minimum": 0 },
-        "minor": { "type": "integer", "minimum": 0 },
-        "moderate": { "type": "integer", "minimum": 0 },
-        "heavy": { "type": "integer", "minimum": 0 }
+        "de_minimis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moderate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "severe": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "edge_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["de_minimis", "minor", "moderate", "heavy"],
-      "description": "Back-face-base point deduction for an edge defect, keyed by severity class.",
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "description": "Version 0.3 deductions by common severity.",
       "properties": {
-        "de_minimis": { "type": "integer", "minimum": 0 },
-        "minor": { "type": "integer", "minimum": 0 },
-        "moderate": { "type": "integer", "minimum": 0 },
-        "heavy": { "type": "integer", "minimum": 0 }
+        "de_minimis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moderate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "severe": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "surface_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["surface", "scratch", "deep"],
+      "required": [
+        "surface",
+        "scratch",
+        "deep"
+      ],
       "description": "Back-face-base point deduction for a surface defect, keyed by depth then size. surface = does not break the gloss; scratch = a visible line you can catch a fingernail on; deep = a crease or break in the paper.",
       "properties": {
         "surface": {
-          "type": "object", "additionalProperties": false,
-          "required": ["dot", "lt_1cm", "lt_5cm", "full_card"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dot",
+            "lt_1cm",
+            "lt_5cm",
+            "full_card"
+          ],
           "properties": {
-            "dot": { "type": "integer", "minimum": 0 },
-            "lt_1cm": { "type": "integer", "minimum": 0 },
-            "lt_5cm": { "type": "integer", "minimum": 0 },
-            "full_card": { "type": "integer", "minimum": 0 }
+            "dot": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_1cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_5cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "full_card": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "scratch": {
-          "type": "object", "additionalProperties": false,
-          "required": ["dot", "lt_1cm", "lt_5cm", "full_card"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dot",
+            "lt_1cm",
+            "lt_5cm",
+            "full_card"
+          ],
           "properties": {
-            "dot": { "type": "integer", "minimum": 0 },
-            "lt_1cm": { "type": "integer", "minimum": 0 },
-            "lt_5cm": { "type": "integer", "minimum": 0 },
-            "full_card": { "type": "integer", "minimum": 0 }
+            "dot": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_1cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_5cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "full_card": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "deep": {
-          "type": "object", "additionalProperties": false,
-          "required": ["dot", "lt_1cm", "lt_5cm", "full_card"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dot",
+            "lt_1cm",
+            "lt_5cm",
+            "full_card"
+          ],
           "properties": {
-            "dot": { "type": "integer", "minimum": 0 },
-            "lt_1cm": { "type": "integer", "minimum": 0 },
-            "lt_5cm": { "type": "integer", "minimum": 0 },
-            "full_card": { "type": "integer", "minimum": 0 }
+            "dot": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_1cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lt_5cm": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "full_card": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }
@@ -129,48 +297,123 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["band", "min_grade"],
+        "required": [
+          "band",
+          "min_grade"
+        ],
         "properties": {
-          "band": { "enum": ["NM", "LP", "MP", "HP", "DMG"] },
-          "min_grade": { "type": "number" }
+          "band": {
+            "enum": [
+              "NM",
+              "LP",
+              "MP",
+              "HP",
+              "DMG"
+            ]
+          },
+          "min_grade": {
+            "type": "number"
+          }
         }
       }
     },
     "print_attributes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["focus", "gloss", "border"],
-      "description": "Optional: the print-quality bottleneck region's attribute ladders — one shared ladder per attribute, assessed independently on each face (no front/back columns here, unlike stains). Penalties are absolute mid-band grade fits (cap at grade g ⇒ 1000 − (100·g + 25)), applied to whichever face declares the attribute, and EXEMPT from front_defect_multiplier. Presence of this key gates the scorer's print region on; rubrics that omit it are unaffected.",
+      "required": [
+        "focus",
+        "gloss",
+        "border"
+      ],
+      "description": "Optional: the print-quality bottleneck region's attribute ladders — one shared ladder per attribute, assessed independently on each face (no front/back columns here, unlike stains). Penalties are absolute mid-band grade fits (cap at grade g â‡’ 1000 âˆ’ (100Â·g + 25)), applied to whichever face declares the attribute, and EXEMPT from front_defect_multiplier. Presence of this key gates the scorer's print region on; rubrics that omit it are unaffected.",
       "properties": {
         "focus": {
-          "type": "object", "additionalProperties": false,
-          "required": ["sharp", "slightly_out", "noticeably_out", "severely_out"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sharp",
+            "slightly_out",
+            "noticeably_out",
+            "severely_out"
+          ],
           "properties": {
-            "sharp": { "type": "integer", "minimum": 0 },
-            "slightly_out": { "type": "integer", "minimum": 0 },
-            "noticeably_out": { "type": "integer", "minimum": 0 },
-            "severely_out": { "type": "integer", "minimum": 0 }
+            "sharp": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "slightly_out": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "noticeably_out": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "severely_out": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "gloss": {
-          "type": "object", "additionalProperties": false,
-          "required": ["full", "most_retained", "some_loss", "much_lost", "absent"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "full",
+            "most_retained",
+            "some_loss",
+            "much_lost",
+            "absent"
+          ],
           "properties": {
-            "full": { "type": "integer", "minimum": 0 },
-            "most_retained": { "type": "integer", "minimum": 0 },
-            "some_loss": { "type": "integer", "minimum": 0 },
-            "much_lost": { "type": "integer", "minimum": 0 },
-            "absent": { "type": "integer", "minimum": 0 }
+            "full": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "most_retained": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "some_loss": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "much_lost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "absent": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "border": {
-          "type": "object", "additionalProperties": false,
-          "required": ["clean", "slightly_off_white", "yellowed", "browned"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clean",
+            "slightly_off_white",
+            "yellowed",
+            "browned"
+          ],
           "properties": {
-            "clean": { "type": "integer", "minimum": 0 },
-            "slightly_off_white": { "type": "integer", "minimum": 0 },
-            "yellowed": { "type": "integer", "minimum": 0 },
-            "browned": { "type": "integer", "minimum": 0 }
+            "clean": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "slightly_off_white": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "yellowed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "browned": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }
@@ -178,51 +421,113 @@
     "crease_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["light", "full_card", "heavy", "through_layers"],
-      "description": "Optional: point deduction for a crease placeable defect, keyed by severity class. Multiplier-exempt — the values are absolute mid-band grade fits (cap at grade g ⇒ 1000 − (100·g + 25)).",
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "description": "Version 0.3 deductions by common severity.",
       "properties": {
-        "light": { "type": "integer", "minimum": 0 },
-        "full_card": { "type": "integer", "minimum": 0 },
-        "heavy": { "type": "integer", "minimum": 0 },
-        "through_layers": { "type": "integer", "minimum": 0 }
+        "de_minimis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moderate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "severe": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "stain_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["very_slight", "slight", "obvious", "heavy"],
-      "description": "Optional: point deduction for a stain placeable defect, keyed by severity class then face. Like crease and print_defect, multiplier-exempt (the values are absolute mid-band grade fits); stains express the front/back asymmetry through explicit per-face columns instead — back stains are forgiven more than front stains.",
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "description": "Version 0.3 deductions by common severity.",
       "properties": {
-        "very_slight": {
-          "type": "object", "additionalProperties": false,
-          "required": ["front", "back"],
+        "de_minimis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "front",
+            "back"
+          ],
           "properties": {
-            "front": { "type": "integer", "minimum": 0 },
-            "back": { "type": "integer", "minimum": 0 }
+            "front": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "back": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "slight": {
-          "type": "object", "additionalProperties": false,
-          "required": ["front", "back"],
+        "minor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "front",
+            "back"
+          ],
           "properties": {
-            "front": { "type": "integer", "minimum": 0 },
-            "back": { "type": "integer", "minimum": 0 }
+            "front": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "back": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "obvious": {
-          "type": "object", "additionalProperties": false,
-          "required": ["front", "back"],
+        "moderate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "front",
+            "back"
+          ],
           "properties": {
-            "front": { "type": "integer", "minimum": 0 },
-            "back": { "type": "integer", "minimum": 0 }
+            "front": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "back": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "heavy": {
-          "type": "object", "additionalProperties": false,
-          "required": ["front", "back"],
+        "severe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "front",
+            "back"
+          ],
           "properties": {
-            "front": { "type": "integer", "minimum": 0 },
-            "back": { "type": "integer", "minimum": 0 }
+            "front": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "back": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }
@@ -230,13 +535,58 @@
     "print_defect_penalties": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["slight", "minor", "blemish", "heavy"],
-      "description": "Optional: point deduction for a print_defect placeable defect (e.g. print snow, spot), keyed by severity class. Multiplier-EXEMPT (the values are absolute mid-band grade fits). Pools into the print region, so it requires a rubric that also defines print_attributes (enforced by dependentRequired at the root).",
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "description": "Version 0.3 deductions by common severity.",
       "properties": {
-        "slight": { "type": "integer", "minimum": 0 },
-        "minor": { "type": "integer", "minimum": 0 },
-        "blemish": { "type": "integer", "minimum": 0 },
-        "heavy": { "type": "integer", "minimum": 0 }
+        "de_minimis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moderate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "severe": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "surface_severity_factors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "de_minimis",
+        "minor",
+        "moderate",
+        "severe"
+      ],
+      "properties": {
+        "de_minimis": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "moderate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "severe": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     }
   }
